@@ -533,7 +533,7 @@
                     <span v-for="tag in (note.tags||[])" :key="tag" class="tag-badge bg-gray-100 text-gray-600">{{ tag }}</span>
                   </div>
                   <!-- 内容预览 -->
-                  <div class="text-xs text-gray-500 line-clamp-3 note-preview" v-html="getNotePreview(note.content)"></div>
+                  <div class="text-xs text-gray-500 line-clamp-3 whitespace-pre-line">{{ getNotePreview(note.content) }}</div>
                   <!-- 关联信息 -->
                   <div v-if="note.linkedWeekly || note.linkedMeeting" class="flex gap-2 mt-2 text-xs">
                     <span v-if="note.linkedWeekly" class="text-primary-500">🔗 关联周报</span>
@@ -852,10 +852,10 @@
         nextTick(() => {
           const el = document.getElementById('quill-editor');
           if (!el) return;
+          // 如果已有实例但 DOM 被重建了，销毁旧的
           if (quillInstance) {
-            // 已初始化，更新内容
-            quillInstance.root.innerHTML = noteForm.value.content || '';
-            return;
+            try { quillInstance.root.innerHTML = ''; } catch(e) {}
+            quillInstance = null;
           }
           quillInstance = new Quill('#quill-editor', {
             theme: 'snow',
