@@ -1777,7 +1777,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
               @click="openWeekly(wr)">
               <div class="flex items-start justify-between mb-2">
                 <div>
-                  <h3 class="font-semibold text-gray-800">周报 #{{ wr.weekLabel || wr.id.slice(0,8) }}</h3>
+                  <h3 class="font-semibold text-gray-800">{{ wr.weekLabel || ('周报 ' + wr.startDate + ' ~ ' + wr.endDate) }}</h3>
                   <div class="text-xs text-gray-500 mt-1">{{ wr.startDate }} ~ {{ wr.endDate }}</div>
                 </div>
                 <div class="flex gap-1">
@@ -2704,7 +2704,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           }
           container.innerHTML += `
             <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;page-break-inside:avoid;">
-              <h2 style="color:#1e293b;margin:0 0 4px;">周报 ${wr.weekLabel || wr.id.slice(0,8)}</h2>
+              <h2 style="color:#1e293b;margin:0 0 4px;">${wr.weekLabel || ('周报 ' + wr.startDate + ' ~ ' + wr.endDate)}</h2>
               <p style="color:#64748b;font-size:13px;margin:0 0 8px;">📅 ${wr.startDate} ~ ${wr.endDate}  ·  任务完成率：${pct}% (${done}/${total})</p>
               <h4 style="color:#334155;margin:12px 0 6px;">本周任务</h4>
               <ul style="margin:0;padding-left:20px;">${tasksHtml}</ul>
@@ -2758,7 +2758,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             '</div>';
         }
         container.innerHTML = `
-          <h1 style="color:#1e293b;margin-bottom:8px;">周报 ${wr.weekLabel || ''}</h1>
+          <h1 style="color:#1e293b;margin-bottom:8px;">${wr.weekLabel || ('周报 ' + (wr.startDate||'') + ' ~ ' + (wr.endDate||''))}</h1>
           <p style="color:#64748b;font-size:14px;margin-bottom:20px;">📅 ${wr.startDate||'-'} ~ ${wr.endDate||'-'}  ·  任务完成率：<b style="color:${pct===100?'#16a34a':'#ec4899'};">${pct}%</b> (${done}/${total})</p>
           <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">✅ 本周任务</h2>
           <ul style="margin:0;padding-left:20px;">${tasksHtml||'<li style="color:#94a3b8;">暂无任务</li>'}</ul>
