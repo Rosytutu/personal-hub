@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人管理中心 - Personal Hub</title>
+  <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind 自定义主题：淡紫 + 粉色
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50:'#faf5ff', 100:'#f3e8ff', 200:'#e9d5ff', 300:'#d8b4fe', 400:'#c084fc', 500:'#a855f7', 600:'#9333ea', 700:'#7e22ce', 800:'#6b21a8', 900:'#581c87' },
+            accent: { 50:'#fdf2f8', 100:'#fce7f3', 200:'#fbcfe8', 300:'#f9a8d4', 400:'#f472b6', 500:'#ec4899', 600:'#db2777', 700:'#be185d', 800:'#9d174d', 900:'#831843' }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Quill 富文本编辑器 -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <!-- PDF 导出依赖 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* ===== 全局样式 ===== */
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Quill 编辑器高度 */
+    .ql-editor { min-height: 200px; max-height: 500px; overflow-y: auto; }
+    .note-editor .ql-editor { min-height: 350px; max-height: 600px; }
+    
+    /* 笔记内容预览样式 */
+    .note-preview img { max-width: 100%; height: auto; border-radius: 6px; margin: 8px 0; }
+    .note-preview h1, .note-preview h2, .note-preview h3 { margin: 8px 0 4px; font-weight: 600; }
+    .note-preview h1 { font-size: 1.3em; }
+    .note-preview h2 { font-size: 1.15em; }
+    .note-preview h3 { font-size: 1.05em; }
+    .note-preview ul, .note-preview ol { padding-left: 1.5em; }
+    .note-preview blockquote { border-left: 3px solid #a855f7; padding-left: 12px; color: #64748b; margin: 8px 0; }
+    .note-preview table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    .note-preview table td, .note-preview table th { border: 1px solid #e2e8f0; padding: 6px 10px; }
+    .note-preview pre { background: #f1f5f9; padding: 10px; border-radius: 6px; overflow-x: auto; }
+
+    /* 过渡动画 */
+    .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+    .fade-enter-from, .fade-leave-to { opacity: 0; }
+    .slide-enter-active, .slide-leave-active { transition: all 0.25s ease; }
+    .slide-enter-from { transform: translateX(20px); opacity: 0; }
+    .slide-leave-to { transform: translateX(-20px); opacity: 0; }
+
+    /* 模态框遮罩 */
+    .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; display: flex; align-items: center; justify-content: center; }
+    .modal-container { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 720px; width: 92%; max-height: 85vh; overflow-y: auto; }
+
+    /* 标签样式 */
+    .tag-badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .tag-badge:hover { opacity: 0.8; }
+
+    /* 图片预览容器 */
+    .img-preview-wrap { position: relative; display: inline-block; margin: 4px; }
+    .img-preview-wrap img { max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover; }
+    .img-preview-wrap .remove-btn { position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+
+    /* Toast 提示 */
+    .toast { position: fixed; top: 20px; right: 20px; z-index: 200; padding: 12px 24px; border-radius: 8px; color: #fff; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.15); animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .modal-container { width: 96%; max-height: 90vh; }
+      .ql-editor { min-height: 150px; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="app">
+    <!-- ========== 顶部导航栏 ========== -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center justify-between h-14">
+          <!-- Logo -->
+          <div class="flex items-center gap-2 cursor-pointer" @click="currentTab='home'">
+            <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+              <span class="text-white font-bold text-sm">P</span>
+            </div>
+            <span class="text-lg font-bold text-gray-800 hidden sm:block">Personal Hub</span>
+          </div>
+          <!-- 导航链接 -->
+          <div class="flex items-center gap-1 sm:gap-2">
+            <button v-for="tab in tabs" :key="tab.key"
+              @click="currentTab = tab.key"
+              :class="[
+                'px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                currentTab === tab.key 
+                  ? 'bg-primary-50 text-primary-600' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              ]">
+              <span class="hidden sm:inline">{{ tab.label }}</span>
+              <span class="sm:hidden text-lg">{{ tab.icon }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ========== Toast 提示 ========== -->
+    <transition name="fade">
+      <div v-if="toast.show" class="toast" :class="toast.type === 'success' ? 'bg-accent-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-primary-500'">
+        {{ toast.message }}
+      </div>
+    </transition>
+
+    <!-- ========== 页面主体 ========== -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <!-- ===== 首页仪表盘 ===== -->
+      <transition name="slide" mode="out-in">
+        <div v-if="currentTab === 'home'" key="home" class="space-y-6">
+          <h2 class="text-2xl font-bold text-gray-800">📊 工作概览</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- 周报快速入口卡片 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" @click="currentTab='weekly'">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-xl">📋</div>
+                <div>
+                  <div class="text-sm text-gray-500">周报管理</div>
+                  <div class="text-2xl font-bold text-gray-800">{{ weeklyReports.length }}</div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-400">共 {{ weeklyReports.length }} 份周报 · 点击进入</p>
+            </div>
+            <!-- 笔记统计卡片 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" @click="currentTab='notes'">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center text-xl">📝</div>
+                <div>
+                  <div class="text-sm text-gray-500">笔记中心</div>
+                  <div class="text-2xl font-bold text-gray-800">{{ activeNotes.length }}</div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-400">{{ starredNotes.length }} 篇收藏 · 点击进入</p>
+            </div>
+            <!-- 会议统计卡片 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" @click="currentTab='meetings'">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-xl">🎙️</div>
+                <div>
+                  <div class="text-sm text-gray-500">会议纪要</div>
+                  <div class="text-2xl font-bold text-gray-800">{{ meetings.length }}</div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-400">共 {{ meetings.length }} 场会议 · 点击进入</p>
+            </div>
+          </div>
+
+          <!-- 最近笔记 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">📌 最近更新的笔记</h3>
+            <div v-if="recentNotes.length === 0" class="text-gray-400 text-sm py-4 text-center">暂无笔记，去笔记中心创建吧</div>
+            <div v-else class="space-y-3">
+              <div v-for="note in recentNotes.slice(0,5)" :key="note.id" 
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                @click="currentTab='notes'; setTimeout(()=>editNote(note),100)">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span v-if="note.starred" class="text-yellow-500 text-xs">⭐</span>
+                    <span class="text-sm font-medium text-gray-800 truncate">{{ note.title || '无标题笔记' }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full" :style="{background: getCategoryColor(note.category)+'20', color: getCategoryColor(note.category)}">{{ note.category }}</span>
+                  </div>
+                  <div class="text-xs text-gray-400 mt-1">{{ formatTime(note.updatedAt) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 近期会议 -->
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">🎙️ 近期会议记录</h3>
+            <div v-if="meetings.length === 0" class="text-gray-400 text-sm py-4 text-center">暂无会议记录</div>
+            <div v-else class="space-y-3">
+              <div v-for="m in meetings.slice(0,5)" :key="m.id"
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                @click="currentTab='meetings'; setTimeout(()=>editMeeting(m),100)">
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-gray-800 truncate">{{ m.title }}</div>
+                  <div class="text-xs text-gray-400 mt-1">{{ m.date }} · {{ m.attendees || '未填写参会人员' }}</div>
+                </div>
+                <span class="text-xs text-gray-400">{{ m.todos ? m.todos.length : 0 }} 项待办</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 会议纪要管理 ===== -->
+        <div v-else-if="currentTab === 'meetings'" key="meetings" class="space-y-6">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <h2 class="text-2xl font-bold text-gray-800">🎙️ 会议纪要</h2>
+            <div class="flex gap-2">
+              <button @click="exportMeetingsPDF"
+                class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                📄 导出PDF
+              </button>
+              <button @click="showMeetingModal = true; editingMeeting = null; resetMeetingForm()"
+                class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
+                + 新建会议
+              </button>
+            </div>
+          </div>
+          <!-- 搜索 -->
+          <div class="relative">
+            <input v-model="meetingSearch" type="text" placeholder="搜索会议标题或内容..."
+              class="w-full px-4 py-2.5 pl-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400">
+            <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+          </div>
+          <!-- 列表 -->
+          <div v-if="filteredMeetings.length === 0" class="text-center py-12 text-gray-400">
+            暂无会议记录，点击上方按钮新建
+          </div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-for="m in filteredMeetings" :key="m.id"
+              class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div class="flex items-start justify-between mb-2">
+                <h3 class="font-semibold text-gray-800 flex-1 min-w-0">{{ m.title }}</h3>
+                <div class="flex gap-1 ml-2">
+                  <button @click="exportSingleMeetingPDF(m)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="导出PDF">📄</button>
+                  <button @click="editMeeting(m)" class="text-gray-400 hover:text-primary-500 text-sm p-1">✏️</button>
+                  <button @click="deleteMeeting(m.id)" class="text-gray-400 hover:text-red-600 text-sm p-1">🗑️</button>
+                </div>
+              </div>
+              <div class="text-xs text-gray-500 mb-2">{{ m.date }} · {{ m.attendees || '-' }}</div>
+              <div class="text-sm text-gray-600 line-clamp-2 mb-3">{{ m.content || '无会议内容' }}</div>
+              <div v-if="m.todos && m.todos.length > 0" class="border-t border-gray-100 pt-2">
+                <div class="text-xs text-gray-500 font-medium mb-1">待办事项：</div>
+                <div v-for="(todo, i) in getMeetingTodoDisplay(m).slice(0,3)" :key="i" class="text-xs" :class="todo.done ? 'text-gray-400 line-through' : 'text-gray-600'">{{ todo.done ? '✅' : '•' }} {{ todo.text }}</div>
+                <div v-if="getMeetingTodoDisplay(m).length > 3" class="text-xs text-gray-400 mt-1">
+                  还有 {{ getMeetingTodoDisplay(m).length - 3 }} 项...
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 会议编辑模态框 -->
+          <div v-if="showMeetingModal" class="modal-mask" @click.self="showMeetingModal=false">
+            <div class="modal-container p-6">
+              <h3 class="text-lg font-bold text-gray-800 mb-4">{{ editingMeeting ? '编辑' : '新建' }}会议纪要</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">会议标题 *</label>
+                  <input v-model="meetingForm.title" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">会议日期</label>
+                  <input v-model="meetingForm.date" type="date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">参会人员</label>
+                  <input v-model="meetingForm.attendees" placeholder="用逗号分隔" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">会议内容</label>
+                  <textarea v-model="meetingForm.content" rows="4" placeholder="记录会议讨论内容..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="block text-sm font-medium text-gray-700">待办事项</label>
+                    <button @click="addMeetingTodo" class="text-sm text-primary-500 hover:text-primary-600 font-medium">+ 添加待办</button>
+                  </div>
+                  <div v-if="meetingForm.todos.length === 0" class="text-gray-400 text-sm py-2 text-center">暂无待办，点击"+ 添加待办"</div>
+                  <div v-else class="space-y-2">
+                    <div v-for="(todo, i) in meetingForm.todos" :key="i" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg group">
+                      <input type="checkbox" v-model="todo.done" class="w-4 h-4 text-primary-500 rounded border-gray-300 focus:ring-primary-400">
+                      <input v-model="todo.text" placeholder="输入待办内容..." class="flex-1 px-2 py-1 border-0 bg-transparent text-sm focus:outline-none" :class="todo.done ? 'line-through text-gray-400' : 'text-gray-700'">
+                      <button @click="removeMeetingTodo(i)" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-sm">✕</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end gap-2 mt-6">
+                <button @click="showMeetingModal=false" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                <button @click="saveMeeting" class="px-4 py-2 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600">保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 周报管理 ===== -->
+        <div v-else-if="currentTab === 'weekly'" key="weekly" class="space-y-6">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <h2 class="text-2xl font-bold text-gray-800">📋 周报管理</h2>
+            <div class="flex gap-2">
+              <button @click="exportWeeklyListPDF"
+                class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                📄 导出全部PDF
+              </button>
+              <button @click="createNewWeekly()"
+                class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
+                + 新建周报
+              </button>
+            </div>
+          </div>
+          <!-- 历史周报列表 -->
+          <div v-if="weeklyReports.length === 0 && !showWeeklyEditor" class="text-center py-12 text-gray-400">
+            暂无周报，点击上方按钮创建第一份周报
+          </div>
+          
+          <!-- 历史周报列表（非编辑模式） -->
+          <div v-if="!showWeeklyEditor && weeklyReports.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-for="wr in weeklyReports" :key="wr.id"
+              class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+              @click="openWeekly(wr)">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <h3 class="font-semibold text-gray-800">周报 #{{ wr.weekLabel || wr.id.slice(0,8) }}</h3>
+                  <div class="text-xs text-gray-500 mt-1">{{ wr.startDate }} ~ {{ wr.endDate }}</div>
+                </div>
+                <div class="flex gap-1">
+                  <button @click.stop="exportSingleWeeklyPDF(wr)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="导出PDF">📄</button>
+                  <button @click.stop="deleteWeekly(wr.id)" class="text-gray-400 hover:text-red-600 text-sm p-1">🗑️</button>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 mt-3">
+                <div class="flex-1 bg-gray-100 rounded-full h-2">
+                  <div class="h-2 rounded-full transition-all" :class="getWeeklyProgress(wr)===100?'bg-green-500':'bg-accent-400'" :style="{width: getWeeklyProgress(wr)+'%'}"></div>
+                </div>
+                <span class="text-xs font-medium" :class="getWeeklyProgress(wr)===100?'text-green-600':'text-gray-600'">{{ getWeeklyProgress(wr) }}%</span>
+              </div>
+              <div class="text-xs text-gray-400 mt-2">任务：{{ wr.tasks ? wr.tasks.filter(t=>t.done).length : 0 }}/{{ wr.tasks ? wr.tasks.length : 0 }}</div>
+            </div>
+          </div>
+
+          <!-- 周报编辑界面 -->
+          <div v-if="showWeeklyEditor" class="space-y-6">
+            <div class="flex items-center gap-3">
+              <button @click="showWeeklyEditor=false" class="text-gray-500 hover:text-gray-700">← 返回列表</button>
+              <span class="text-sm text-gray-400">|</span>
+              <span class="text-sm font-medium text-gray-700">{{ editingWeeklyId ? '编辑周报' : '新建周报' }}</span>
+            </div>
+
+            <!-- 日期设置 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <h3 class="text-md font-semibold text-gray-800 mb-3">📅 本周日期</h3>
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                  <label class="text-sm text-gray-600">起始：</label>
+                  <input v-model="weeklyForm.startDate" type="date" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+                </div>
+                <span class="text-gray-400">~</span>
+                <div class="flex items-center gap-2">
+                  <label class="text-sm text-gray-600">结束：</label>
+                  <input v-model="weeklyForm.endDate" type="date" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+                </div>
+                <input v-model="weeklyForm.weekLabel" placeholder="周标签（如：第30周）" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm w-36 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              </div>
+            </div>
+
+            <!-- 本周任务 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-md font-semibold text-gray-800">✅ 本周任务</h3>
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-32 bg-gray-100 rounded-full h-2.5">
+                      <div class="h-2.5 rounded-full transition-all duration-300" :class="weeklyTaskProgress===100?'bg-green-500':'bg-accent-400'" :style="{width: weeklyTaskProgress+'%'}"></div>
+                    </div>
+                    <span class="text-sm font-bold" :class="weeklyTaskProgress===100?'text-green-600':'text-gray-600'">{{ weeklyTaskProgress }}%</span>
+                  </div>
+                  <button @click="addWeeklyTask" class="text-sm text-primary-500 hover:text-primary-600 font-medium">+ 添加任务</button>
+                </div>
+              </div>
+              <div v-if="weeklyForm.tasks.length === 0" class="text-gray-400 text-sm py-4 text-center">点击"+ 添加任务"开始</div>
+              <div v-else class="space-y-2">
+                <div v-for="(task, i) in weeklyForm.tasks" :key="i" class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg group">
+                  <input type="checkbox" v-model="task.done" @change="updateWeeklyProgress" class="w-4 h-4 text-primary-500 rounded border-gray-300 focus:ring-primary-400">
+                  <input v-model="task.text" @input="updateWeeklyProgress" placeholder="输入任务内容..."
+                    class="flex-1 px-2 py-1 border-0 bg-transparent text-sm focus:outline-none"
+                    :class="task.done ? 'line-through text-gray-400' : 'text-gray-700'">
+                  <button @click="weeklyForm.tasks.splice(i,1); updateWeeklyProgress()" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-sm">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 难点问题 + 解决办法 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-md font-semibold text-gray-800">⚠️ 本周难点问题 & 解决办法</h3>
+                <button @click="addWeeklyProblem" class="text-sm text-primary-500 hover:text-primary-600 font-medium">+ 添加</button>
+              </div>
+              <div v-if="weeklyForm.problems.length === 0" class="text-gray-400 text-sm py-4 text-center">暂无记录</div>
+              <div v-else class="space-y-3">
+                <div v-for="(p, i) in weeklyForm.problems" :key="i" class="border border-gray-100 rounded-lg p-3">
+                  <div class="flex items-start justify-between mb-2">
+                    <span class="text-xs font-medium text-gray-500">问题 {{ i+1 }}</span>
+                    <button @click="weeklyForm.problems.splice(i,1)" class="text-gray-300 hover:text-red-500 text-sm">✕</button>
+                  </div>
+                  <textarea v-model="p.problem" placeholder="描述难点问题..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200 mb-2"></textarea>
+                  <textarea v-model="p.solution" placeholder="对应解决办法..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200"></textarea>
+                  <!-- 问题图片 -->
+                  <div class="mt-2">
+                    <div class="flex flex-wrap gap-2">
+                      <div v-for="(img, j) in (p.images||[])" :key="j" class="img-preview-wrap">
+                        <img :src="img" alt="问题图片">
+                        <span class="remove-btn" @click="p.images.splice(j,1)">✕</span>
+                      </div>
+                    </div>
+                    <label class="inline-flex items-center gap-1 text-xs text-primary-500 cursor-pointer hover:text-primary-600 mt-1">
+                      📷 上传图片
+                      <input type="file" accept="image/*" class="hidden" @change="handleProblemImage($event, i)">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 本周个人总结 -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <h3 class="text-md font-semibold text-gray-800 mb-3">📝 本周个人总结</h3>
+              <textarea v-model="weeklyForm.summary" placeholder="写下本周的个人总结、收获与反思..." rows="5"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+              <!-- 总结图片 -->
+              <div class="mt-3">
+                <div class="flex flex-wrap gap-2">
+                  <div v-for="(img, j) in (weeklyForm.summaryImages||[])" :key="j" class="img-preview-wrap">
+                    <img :src="img" alt="总结图片">
+                    <span class="remove-btn" @click="weeklyForm.summaryImages.splice(j,1)">✕</span>
+                  </div>
+                </div>
+                <label class="inline-flex items-center gap-1 text-xs text-primary-500 cursor-pointer hover:text-primary-600 mt-1">
+                  📷 上传图片
+                  <input type="file" accept="image/*" class="hidden" @change="handleSummaryImage($event)">
+                </label>
+              </div>
+            </div>
+
+            <!-- 保存按钮 -->
+            <div class="flex justify-end gap-2">
+              <button @click="exportCurrentWeeklyPDF" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">📄 导出PDF</button>
+              <button @click="showWeeklyEditor=false" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+              <button @click="saveWeekly" class="px-6 py-2 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium">保存周报</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 笔记中心 ===== -->
+        <div v-else-if="currentTab === 'notes'" key="notes" class="space-y-6">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <h2 class="text-2xl font-bold text-gray-800">📝 笔记中心</h2>
+            <div class="flex gap-2">
+              <button @click="exportNotesListPDF"
+                class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                📄 导出全部PDF
+              </button>
+              <button @click="createNewNote()"
+                class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
+                + 新建笔记
+              </button>
+            </div>
+          </div>
+
+          <!-- 工具栏：搜索、分类、标签筛选 -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[200px]">
+              <input v-model="noteSearch" type="text" placeholder="搜索笔记标题或内容..."
+                class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <span class="absolute left-3 top-2 text-gray-400">🔍</span>
+            </div>
+            <select v-model="noteCategoryFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="">全部分类</option>
+              <option v-for="cat in noteCategories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+            <select v-model="noteTagFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="">全部标签</option>
+              <option v-for="tag in allNoteTags" :key="tag" :value="tag">{{ tag }}</option>
+            </select>
+            <button v-if="showTrash" @click="showTrash=false" class="text-sm text-primary-500 hover:text-primary-600">← 返回笔记</button>
+            <button v-else @click="showTrash=true" class="text-sm text-gray-500 hover:text-gray-700">🗑️ 回收站 ({{ trashedNotes.length }})</button>
+          </div>
+
+          <!-- 笔记列表 / 回收站 -->
+          <div v-if="!showNoteEditor">
+            <!-- 回收站视图 -->
+            <div v-if="showTrash">
+              <div v-if="trashedNotes.length === 0" class="text-center py-12 text-gray-400">回收站为空</div>
+              <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-for="note in trashedNotes" :key="note.id"
+                  class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                  <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-semibold text-gray-800">{{ note.title || '无标题' }}</h3>
+                    <div class="flex gap-1">
+                      <button @click="restoreNote(note.id)" class="text-xs text-accent-500 hover:text-accent-700 px-2 py-1">恢复</button>
+                      <button @click="permanentlyDeleteNote(note.id)" class="text-xs text-red-600 hover:text-red-800 px-2 py-1">彻底删除</button>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-400">{{ formatTime(note.deletedAt) }} 删除</div>
+                </div>
+              </div>
+            </div>
+            <!-- 正常笔记列表 -->
+            <div v-else>
+              <div v-if="filteredNotes.length === 0" class="text-center py-12 text-gray-400">
+                暂无笔记，点击"+ 新建笔记"开始
+              </div>
+              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div v-for="note in filteredNotes" :key="note.id"
+                  class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
+                  :class="note.pinned ? 'border-primary-300 ring-1 ring-primary-100' : ''"
+                  @click="editNote(note)">
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                      <span v-if="note.pinned" class="text-xs">📌</span>
+                      <span v-if="note.starred" class="text-xs">⭐</span>
+                      <h3 class="font-semibold text-gray-800 text-sm truncate">{{ note.title || '无标题笔记' }}</h3>
+                    </div>
+                    <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                      <button @click.stop="exportSingleNotePDF(note)" class="text-gray-400 hover:text-blue-600 text-xs p-1" title="导出PDF">📄</button>
+                      <button @click.stop="togglePin(note)" class="text-gray-400 hover:text-primary-500 text-xs p-1" :title="note.pinned?'取消置顶':'置顶'">📌</button>
+                      <button @click.stop="toggleStar(note)" class="text-gray-400 hover:text-yellow-500 text-xs p-1" :title="note.starred?'取消收藏':'收藏'">⭐</button>
+                      <button @click.stop="trashNote(note.id)" class="text-gray-400 hover:text-red-600 text-xs p-1">🗑️</button>
+                    </div>
+                  </div>
+                  <!-- 分类和标签 -->
+                  <div class="flex flex-wrap gap-1 mb-2">
+                    <span class="text-xs px-2 py-0.5 rounded-full" :style="{background: getCategoryColor(note.category)+'20', color: getCategoryColor(note.category)}">{{ note.category }}</span>
+                    <span v-for="tag in (note.tags||[])" :key="tag" class="tag-badge bg-gray-100 text-gray-600">{{ tag }}</span>
+                  </div>
+                  <!-- 内容预览 -->
+                  <div class="text-xs text-gray-500 line-clamp-3 note-preview" v-html="getNotePreview(note.content)"></div>
+                  <!-- 关联信息 -->
+                  <div v-if="note.linkedWeekly || note.linkedMeeting" class="flex gap-2 mt-2 text-xs">
+                    <span v-if="note.linkedWeekly" class="text-primary-500">🔗 关联周报</span>
+                    <span v-if="note.linkedMeeting" class="text-accent-500">🔗 关联会议</span>
+                  </div>
+                  <div class="text-xs text-gray-400 mt-3">{{ formatTime(note.updatedAt) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 笔记编辑器 -->
+          <div v-if="showNoteEditor" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <button @click="showNoteEditor=false" class="text-gray-500 hover:text-gray-700">← 返回列表</button>
+              <span class="text-sm text-gray-400">|</span>
+              <span class="text-sm font-medium text-gray-700">{{ editingNoteId ? '编辑笔记' : '新建笔记' }}</span>
+              <div class="flex-1"></div>
+              <button @click="saveNote" class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600">保存笔记</button>
+              <button @click="exportNote" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">导出文本</button>
+              <button @click="exportCurrentNotePDF" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">📄 导出PDF</button>
+            </div>
+
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 space-y-4">
+              <!-- 标题 -->
+              <input v-model="noteForm.title" placeholder="笔记标题..." class="w-full text-xl font-bold border-0 focus:outline-none text-gray-800">
+
+              <!-- 元数据行 -->
+              <div class="flex flex-wrap items-center gap-3">
+                <select v-model="noteForm.category" class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200">
+                  <option v-for="cat in noteCategories" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span v-for="(tag, i) in (noteForm.tags||[])" :key="i" class="tag-badge bg-primary-50 text-primary-600">
+                    {{ tag }} <span @click="noteForm.tags.splice(i,1)" class="ml-1 cursor-pointer hover:text-red-500">✕</span>
+                  </span>
+                  <input v-model="newTagInput" @keydown.enter="addTagToNote" placeholder="+ 标签" 
+                    class="w-20 px-2 py-1 border border-dashed border-gray-300 rounded text-xs focus:outline-none focus:border-primary-400">
+                </div>
+                <label class="flex items-center gap-1 text-sm text-gray-500 cursor-pointer">
+                  <input type="checkbox" v-model="noteForm.pinned" class="rounded"> 置顶
+                </label>
+                <label class="flex items-center gap-1 text-sm text-gray-500 cursor-pointer">
+                  <input type="checkbox" v-model="noteForm.starred" class="rounded"> 收藏
+                </label>
+              </div>
+
+              <!-- 关联 -->
+              <div class="flex flex-wrap items-center gap-3 text-sm">
+                <span class="text-gray-500">关联到：</span>
+                <select v-model="noteForm.linkedWeekly" class="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none">
+                  <option value="">无关联周报</option>
+                  <option v-for="wr in weeklyReports" :key="wr.id" :value="wr.id">{{ wr.weekLabel || wr.startDate }}</option>
+                </select>
+                <select v-model="noteForm.linkedMeeting" class="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none">
+                  <option value="">无关联会议</option>
+                  <option v-for="m in meetings" :key="m.id" :value="m.id">{{ m.title }}</option>
+                </select>
+              </div>
+
+              <!-- Quill 富文本编辑器 -->
+              <div class="note-editor">
+                <div id="quill-editor"></div>
+              </div>
+
+              <!-- 创建/修改时间 -->
+              <div class="text-xs text-gray-400">
+                创建：{{ noteForm.createdAt ? formatTime(noteForm.createdAt) : '未保存' }} | 
+                修改：{{ noteForm.updatedAt ? formatTime(noteForm.updatedAt) : '-' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </main>
+  </div>
+
+  <script>
+  const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
+
+  const STORAGE_KEY = {
+    meetings: 'personal_hub_meetings',
+    weekly: 'personal_hub_weekly',
+    notes: 'personal_hub_notes',
+    trash: 'personal_hub_trash'
+  };
+
+  const app = createApp({
+    setup() {
+      // ===== 全局状态 =====
+      const currentTab = ref('home');
+      const toast = ref({ show: false, message: '', type: 'success' });
+
+      const showToast = (message, type = 'success') => {
+        toast.value = { show: true, message, type };
+        setTimeout(() => { toast.value.show = false; }, 2000);
+      };
+
+      // ===== 通用工具函数 =====
+      const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+      const formatTime = (ts) => {
+        if (!ts) return '-';
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      };
+
+      // 图片转 base64
+      const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      // ========== 会议纪要模块 ==========
+      const meetings = ref(loadFromStorage(STORAGE_KEY.meetings, []));
+      const meetingSearch = ref('');
+      const showMeetingModal = ref(false);
+      const editingMeeting = ref(null);
+      const meetingForm = ref({ title: '', date: '', attendees: '', content: '', todos: [] });
+
+      const resetMeetingForm = () => {
+        meetingForm.value = { title: '', date: new Date().toISOString().slice(0,10), attendees: '', content: '', todos: [] };
+      };
+
+      const addMeetingTodo = () => {
+        meetingForm.value.todos.push({ text: '', done: false });
+      };
+
+      const removeMeetingTodo = (index) => {
+        meetingForm.value.todos.splice(index, 1);
+      };
+
+      const filteredMeetings = computed(() => {
+        if (!meetingSearch.value) return meetings.value;
+        const q = meetingSearch.value.toLowerCase();
+        return meetings.value.filter(m =>
+          (m.title||'').toLowerCase().includes(q) ||
+          (m.content||'').toLowerCase().includes(q) ||
+          (m.attendees||'').toLowerCase().includes(q)
+        );
+      });
+
+      const editMeeting = (m) => {
+        editingMeeting.value = m;
+        // 兼容旧数据：字符串 todos 转数组
+        const copy = { ...m };
+        if (copy.todos && !Array.isArray(copy.todos)) {
+          copy.todos = copy.todos.split('\n').filter(l => l.trim()).map(t => ({ text: t, done: false }));
+        }
+        if (!copy.todos) copy.todos = [];
+        meetingForm.value = copy;
+        showMeetingModal.value = true;
+      };
+
+      const saveMeeting = () => {
+        if (!meetingForm.value.title.trim()) { showToast('请输入会议标题', 'error'); return; }
+        if (editingMeeting.value) {
+          const idx = meetings.value.findIndex(m => m.id === editingMeeting.value.id);
+          if (idx >= 0) meetings.value[idx] = { ...meetingForm.value, id: editingMeeting.value.id };
+        } else {
+          meetings.value.unshift({ ...meetingForm.value, id: genId() });
+        }
+        saveToStorage(STORAGE_KEY.meetings, meetings.value);
+        showMeetingModal.value = false;
+        editingMeeting.value = null;
+        showToast('会议纪要已保存');
+      };
+
+      const deleteMeeting = (id) => {
+        if (!confirm('确定删除该会议纪要？')) return;
+        meetings.value = meetings.value.filter(m => m.id !== id);
+        saveToStorage(STORAGE_KEY.meetings, meetings.value);
+        showToast('已删除');
+      };
+
+      // 兼容旧数据：旧版 todos 是字符串，新版是数组
+      const getMeetingTodoDisplay = (m) => {
+        if (!m.todos) return [];
+        if (Array.isArray(m.todos)) return m.todos;
+        // 旧数据兼容：字符串转数组
+        return m.todos.split('\n').filter(l => l.trim()).map(t => ({ text: t, done: false }));
+      };
+
+      // ========== 周报管理模块 ==========
+      const weeklyReports = ref(loadFromStorage(STORAGE_KEY.weekly, []));
+      const showWeeklyEditor = ref(false);
+      const editingWeeklyId = ref(null);
+      const weeklyForm = ref({
+        startDate: '', endDate: '', weekLabel: '',
+        tasks: [], problems: [], summary: '', summaryImages: []
+      });
+
+      const weeklyTaskProgress = computed(() => {
+        const tasks = weeklyForm.value.tasks;
+        if (!tasks || tasks.length === 0) return 0;
+        const done = tasks.filter(t => t.done).length;
+        return Math.round((done / tasks.length) * 100);
+      });
+
+      const updateWeeklyProgress = () => {
+        // 触发 computed 重新计算
+      };
+
+      const getWeeklyProgress = (wr) => {
+        if (!wr.tasks || wr.tasks.length === 0) return 0;
+        const done = wr.tasks.filter(t => t.done).length;
+        return Math.round((done / wr.tasks.length) * 100);
+      };
+
+      const resetWeeklyForm = () => {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        weeklyForm.value = {
+          startDate: monday.toISOString().slice(0,10),
+          endDate: sunday.toISOString().slice(0,10),
+          weekLabel: '',
+          tasks: [],
+          problems: [],
+          summary: '',
+          summaryImages: []
+        };
+      };
+
+      const createNewWeekly = () => {
+        editingWeeklyId.value = null;
+        resetWeeklyForm();
+        showWeeklyEditor.value = true;
+      };
+
+      const openWeekly = (wr) => {
+        editingWeeklyId.value = wr.id;
+        weeklyForm.value = JSON.parse(JSON.stringify(wr));
+        showWeeklyEditor.value = true;
+      };
+
+      const addWeeklyTask = () => {
+        weeklyForm.value.tasks.push({ text: '', done: false });
+      };
+
+      const addWeeklyProblem = () => {
+        weeklyForm.value.problems.push({ problem: '', solution: '', images: [] });
+      };
+
+      const handleProblemImage = async (event, index) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const base64 = await fileToBase64(file);
+          if (!weeklyForm.value.problems[index].images) weeklyForm.value.problems[index].images = [];
+          weeklyForm.value.problems[index].images.push(base64);
+        } catch (e) { showToast('图片读取失败', 'error'); }
+        event.target.value = '';
+      };
+
+      const handleSummaryImage = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const base64 = await fileToBase64(file);
+          if (!weeklyForm.value.summaryImages) weeklyForm.value.summaryImages = [];
+          weeklyForm.value.summaryImages.push(base64);
+        } catch (e) { showToast('图片读取失败', 'error'); }
+        event.target.value = '';
+      };
+
+      const saveWeekly = () => {
+        const data = JSON.parse(JSON.stringify(weeklyForm.value));
+        if (editingWeeklyId.value) {
+          const idx = weeklyReports.value.findIndex(w => w.id === editingWeeklyId.value);
+          if (idx >= 0) weeklyReports.value[idx] = { ...data, id: editingWeeklyId.value };
+        } else {
+          weeklyReports.value.unshift({ ...data, id: genId() });
+        }
+        saveToStorage(STORAGE_KEY.weekly, weeklyReports.value);
+        showWeeklyEditor.value = false;
+        editingWeeklyId.value = null;
+        showToast('周报已保存');
+      };
+
+      const deleteWeekly = (id) => {
+        if (!confirm('确定删除该周报？')) return;
+        weeklyReports.value = weeklyReports.value.filter(w => w.id !== id);
+        saveToStorage(STORAGE_KEY.weekly, weeklyReports.value);
+        showToast('已删除');
+      };
+
+      // ========== 笔记中心模块 ==========
+      const notes = ref(loadFromStorage(STORAGE_KEY.notes, []));
+      const trash = ref(loadFromStorage(STORAGE_KEY.trash, []));
+      const showNoteEditor = ref(false);
+      const editingNoteId = ref(null);
+      const showTrash = ref(false);
+      const noteSearch = ref('');
+      const noteCategoryFilter = ref('');
+      const noteTagFilter = ref('');
+      const newTagInput = ref('');
+      const noteCategories = ['工作', '学习', '生活', '项目', '知识库'];
+
+      const noteForm = ref({
+        title: '', content: '', category: '工作', tags: [],
+        pinned: false, starred: false,
+        linkedWeekly: '', linkedMeeting: '',
+        createdAt: null, updatedAt: null
+      });
+
+      let quillInstance = null;
+
+      const initQuill = () => {
+        nextTick(() => {
+          const el = document.getElementById('quill-editor');
+          if (!el) return;
+          if (quillInstance) {
+            // 已初始化，更新内容
+            quillInstance.root.innerHTML = noteForm.value.content || '';
+            return;
+          }
+          quillInstance = new Quill('#quill-editor', {
+            theme: 'snow',
+            modules: {
+              toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['table'],
+                [{ 'align': [] }],
+                ['link', 'image'],
+                ['clean']
+              ]
+            },
+            placeholder: '开始写笔记...'
+          });
+          quillInstance.root.innerHTML = noteForm.value.content || '';
+
+          // 自定义图片上传处理（转base64）
+          quillInstance.getModule('toolbar').addHandler('image', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async () => {
+              const file = input.files[0];
+              if (!file) return;
+              try {
+                const base64 = await fileToBase64(file);
+                const range = quillInstance.getSelection(true);
+                quillInstance.insertEmbed(range.index, 'image', base64);
+              } catch (e) { showToast('图片插入失败', 'error'); }
+            };
+            input.click();
+          });
+        });
+      };
+
+      const activeNotes = computed(() => notes.value.filter(n => !n.trashed));
+      const trashedNotes = computed(() => trash.value);
+      const starredNotes = computed(() => activeNotes.value.filter(n => n.starred));
+
+      const allNoteTags = computed(() => {
+        const tags = new Set();
+        activeNotes.value.forEach(n => (n.tags||[]).forEach(t => tags.add(t)));
+        return [...tags].sort();
+      });
+
+      const filteredNotes = computed(() => {
+        let list = activeNotes.value;
+        if (noteSearch.value) {
+          const q = noteSearch.value.toLowerCase();
+          list = list.filter(n =>
+            (n.title||'').toLowerCase().includes(q) ||
+            (n.content||'').toLowerCase().includes(q)
+          );
+        }
+        if (noteCategoryFilter.value) list = list.filter(n => n.category === noteCategoryFilter.value);
+        if (noteTagFilter.value) list = list.filter(n => (n.tags||[]).includes(noteTagFilter.value));
+        // 排序：置顶优先，然后按更新时间
+        return [...list].sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return (b.updatedAt || 0) - (a.updatedAt || 0);
+        });
+      });
+
+      const recentNotes = computed(() => {
+        return [...activeNotes.value].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      });
+
+      const getNotePreview = (content) => {
+        if (!content) return '<span class="text-gray-400">空笔记</span>';
+        const div = document.createElement('div');
+        div.innerHTML = content;
+        const text = div.textContent || '';
+        return text.slice(0, 150) + (text.length > 150 ? '...' : '');
+      };
+
+      const getCategoryColor = (cat) => {
+        const colors = { '工作': '#a855f7', '学习': '#ec4899', '生活': '#f472b6', '项目': '#c084fc', '知识库': '#d8b4fe' };
+        return colors[cat] || '#a78bfa';
+      };
+
+      const resetNoteForm = () => {
+        noteForm.value = {
+          title: '', content: '', category: '工作', tags: [],
+          pinned: false, starred: false,
+          linkedWeekly: '', linkedMeeting: '',
+          createdAt: Date.now(), updatedAt: Date.now()
+        };
+        if (quillInstance) quillInstance.root.innerHTML = '';
+      };
+
+      const createNewNote = () => {
+        editingNoteId.value = null;
+        resetNoteForm();
+        showNoteEditor.value = true;
+        showTrash.value = false;
+        initQuill();
+      };
+
+      const editNote = (note) => {
+        editingNoteId.value = note.id;
+        noteForm.value = { ...note };
+        showNoteEditor.value = true;
+        showTrash.value = false;
+        nextTick(() => initQuill());
+      };
+
+      const addTagToNote = () => {
+        const tag = newTagInput.value.trim();
+        if (!tag) return;
+        if (!noteForm.value.tags) noteForm.value.tags = [];
+        if (!noteForm.value.tags.includes(tag)) noteForm.value.tags.push(tag);
+        newTagInput.value = '';
+      };
+
+      const saveNote = () => {
+        if (quillInstance) noteForm.value.content = quillInstance.root.innerHTML;
+        noteForm.value.updatedAt = Date.now();
+        if (!noteForm.value.createdAt) noteForm.value.createdAt = Date.now();
+
+        if (editingNoteId.value) {
+          const idx = notes.value.findIndex(n => n.id === editingNoteId.value);
+          if (idx >= 0) notes.value[idx] = { ...noteForm.value, id: editingNoteId.value, trashed: false };
+        } else {
+          notes.value.unshift({ ...noteForm.value, id: genId(), trashed: false });
+        }
+        saveToStorage(STORAGE_KEY.notes, notes.value);
+        showNoteEditor.value = false;
+        editingNoteId.value = null;
+        showToast('笔记已保存');
+      };
+
+      const togglePin = (note) => {
+        note.pinned = !note.pinned;
+        saveToStorage(STORAGE_KEY.notes, notes.value);
+      };
+
+      const toggleStar = (note) => {
+        note.starred = !note.starred;
+        saveToStorage(STORAGE_KEY.notes, notes.value);
+      };
+
+      const trashNote = (id) => {
+        const note = notes.value.find(n => n.id === id);
+        if (!note) return;
+        notes.value = notes.value.filter(n => n.id !== id);
+        trash.value.unshift({ ...note, trashed: true, deletedAt: Date.now() });
+        saveToStorage(STORAGE_KEY.notes, notes.value);
+        saveToStorage(STORAGE_KEY.trash, trash.value);
+        showToast('已移至回收站');
+      };
+
+      const restoreNote = (id) => {
+        const note = trash.value.find(n => n.id === id);
+        if (!note) return;
+        trash.value = trash.value.filter(n => n.id !== id);
+        notes.value.unshift({ ...note, trashed: false, deletedAt: null });
+        saveToStorage(STORAGE_KEY.notes, notes.value);
+        saveToStorage(STORAGE_KEY.trash, trash.value);
+        showToast('已恢复');
+      };
+
+      const permanentlyDeleteNote = (id) => {
+        if (!confirm('确定彻底删除该笔记？此操作不可恢复。')) return;
+        trash.value = trash.value.filter(n => n.id !== id);
+        saveToStorage(STORAGE_KEY.trash, trash.value);
+        showToast('已彻底删除');
+      };
+
+      const exportNote = () => {
+        if (quillInstance) noteForm.value.content = quillInstance.root.innerHTML;
+        const title = noteForm.value.title || '未命名笔记';
+        const div = document.createElement('div');
+        div.innerHTML = noteForm.value.content || '';
+        const text = div.textContent || '';
+        const blob = new Blob([`# ${title}\n\n${text}`], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${title}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('笔记已导出');
+      };
+
+      // ===== PDF 导出工具函数 =====
+      // 通用：将 HTML 元素截图并生成 PDF
+      const htmlToPDF = async (element, filename = 'export.pdf') => {
+        try {
+          showToast('正在生成PDF...', 'info');
+          const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+          });
+          const { jsPDF } = window.jspdf;
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const imgWidth = pageWidth - 20; // 左右各10mm边距
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          let heightLeft = imgHeight;
+          let position = 10; // 顶部边距
+
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= (pageHeight - 20);
+
+          // 多页处理
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight + 10;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= (pageHeight - 20);
+          }
+
+          pdf.save(filename);
+          showToast('PDF 导出成功');
+        } catch (e) {
+          console.error('PDF导出失败:', e);
+          showToast('PDF导出失败，请重试', 'error');
+        }
+      };
+
+      // 会议纪要 - 导出全部
+      const exportMeetingsPDF = async () => {
+        const container = document.createElement('div');
+        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
+        container.innerHTML = `<h1 style="margin-bottom:16px;color:#1e293b;">会议纪要汇总</h1>
+          <p style="color:#94a3b8;margin-bottom:24px;">导出时间：${formatTime(Date.now())}  ·  共 ${meetings.value.length} 场会议</p>`;
+        meetings.value.forEach((m, i) => {
+          const todos = getMeetingTodoDisplay(m);
+          let todosHtml = '';
+          if (todos.length > 0) {
+            todosHtml = '<p style="color:#475569;font-size:13px;margin:0;"><b>待办事项：</b></p><ul style="margin:4px 0 0;padding-left:20px;">' +
+              todos.map(t => `<li style="color:#475569;font-size:13px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`).join('') +
+              '</ul>';
+          }
+          container.innerHTML += `
+            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;">
+              <h3 style="color:#334155;margin:0 0 8px;">${i+1}. ${m.title || '无标题'}</h3>
+              <p style="color:#64748b;font-size:13px;margin:0 0 8px;">📅 ${m.date || '-'}  ·  👥 ${m.attendees || '-'}</p>
+              <p style="color:#475569;font-size:14px;margin:0 0 8px;white-space:pre-wrap;">${m.content || '无内容'}</p>
+              ${todosHtml}
+            </div>`;
+        });
+        document.body.appendChild(container);
+        await htmlToPDF(container, `会议纪要_${new Date().toISOString().slice(0,10)}.pdf`);
+        document.body.removeChild(container);
+      };
+
+      // 会议纪要 - 导出单条
+      const exportSingleMeetingPDF = async (m) => {
+        const container = document.createElement('div');
+        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
+        const todos = getMeetingTodoDisplay(m);
+        let todosHtml = '';
+        if (todos.length > 0) {
+          todosHtml = '<h3 style="color:#334155;margin-top:20px;">待办事项</h3><ul style="margin:4px 0 0;padding-left:20px;">' +
+            todos.map(t => `<li style="color:#475569;font-size:14px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`).join('') +
+            '</ul>';
+        }
+        container.innerHTML = `
+          <h1 style="color:#1e293b;margin-bottom:8px;">${m.title || '无标题'}</h1>
+          <p style="color:#94a3b8;margin-bottom:20px;">📅 ${m.date || '-'}  ·  👥 ${m.attendees || '-'}</p>
+          <h3 style="color:#334155;">会议内容</h3>
+          <p style="color:#475569;font-size:14px;white-space:pre-wrap;line-height:1.7;">${m.content || '无内容'}</p>
+          ${todosHtml}`;
+        document.body.appendChild(container);
+        await htmlToPDF(container, `会议纪要_${m.title||'未命名'}.pdf`);
+        document.body.removeChild(container);
+      };
+
+      // 周报 - 导出列表全部
+      const exportWeeklyListPDF = async () => {
+        const container = document.createElement('div');
+        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
+        container.innerHTML = `<h1 style="margin-bottom:16px;color:#1e293b;">周报汇总</h1>
+          <p style="color:#94a3b8;margin-bottom:24px;">导出时间：${formatTime(Date.now())}  ·  共 ${weeklyReports.value.length} 份周报</p>`;
+        weeklyReports.value.forEach((wr, i) => {
+          const total = wr.tasks ? wr.tasks.length : 0;
+          const done = wr.tasks ? wr.tasks.filter(t=>t.done).length : 0;
+          const pct = total > 0 ? Math.round((done/total)*100) : 0;
+          let tasksHtml = '';
+          if (wr.tasks) {
+            wr.tasks.forEach(t => {
+              tasksHtml += `<li style="color:#475569;font-size:13px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`;
+            });
+          }
+          let problemsHtml = '';
+          if (wr.problems) {
+            wr.problems.forEach(p => {
+              let imgs = '';
+              if (p.images && p.images.length > 0) {
+                imgs = '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">' +
+                  p.images.map(img => `<img src="${img}" style="max-width:180px;max-height:120px;border-radius:6px;object-fit:cover;">`).join('') +
+                  '</div>';
+              }
+              problemsHtml += `<div style="margin-bottom:8px;"><p style="color:#ec4899;font-size:13px;margin:0;"><b>问题：</b>${p.problem||'-'}</p><p style="color:#a855f7;font-size:13px;margin:0;"><b>解决：</b>${p.solution||'-'}</p>${imgs}</div>`;
+            });
+          }
+          let summaryExtra = '';
+          if (wr.summaryImages && wr.summaryImages.length > 0) {
+            summaryExtra = '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">' +
+              wr.summaryImages.map(img => `<img src="${img}" style="max-width:180px;max-height:120px;border-radius:6px;object-fit:cover;">`).join('') +
+              '</div>';
+          }
+          container.innerHTML += `
+            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;page-break-inside:avoid;">
+              <h2 style="color:#1e293b;margin:0 0 4px;">周报 ${wr.weekLabel || wr.id.slice(0,8)}</h2>
+              <p style="color:#64748b;font-size:13px;margin:0 0 8px;">📅 ${wr.startDate} ~ ${wr.endDate}  ·  任务完成率：${pct}% (${done}/${total})</p>
+              <h4 style="color:#334155;margin:12px 0 6px;">本周任务</h4>
+              <ul style="margin:0;padding-left:20px;">${tasksHtml}</ul>
+              ${problemsHtml ? `<h4 style="color:#334155;margin:12px 0 6px;">难点问题 & 解决办法</h4>${problemsHtml}` : ''}
+              ${wr.summary ? `<h4 style="color:#334155;margin:12px 0 6px;">个人总结</h4><p style="color:#475569;font-size:14px;white-space:pre-wrap;">${wr.summary}</p>${summaryExtra}` : (summaryExtra ? `<h4 style="color:#334155;margin:12px 0 6px;">个人总结</h4>${summaryExtra}` : '')}
+            </div>`;
+        });
+        document.body.appendChild(container);
+        await htmlToPDF(container, `周报汇总_${new Date().toISOString().slice(0,10)}.pdf`);
+        document.body.removeChild(container);
+      };
+
+      // 周报 - 导出单条
+      const exportSingleWeeklyPDF = async (wr) => {
+        await exportWeeklyContentPDF(wr);
+      };
+
+      // 周报 - 导出当前编辑中的
+      const exportCurrentWeeklyPDF = async () => {
+        await exportWeeklyContentPDF(weeklyForm.value);
+      };
+
+      const exportWeeklyContentPDF = async (wr) => {
+        const container = document.createElement('div');
+        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
+        const total = wr.tasks ? wr.tasks.length : 0;
+        const done = wr.tasks ? wr.tasks.filter(t=>t.done).length : 0;
+        const pct = total > 0 ? Math.round((done/total)*100) : 0;
+        let tasksHtml = '';
+        if (wr.tasks) {
+          wr.tasks.forEach(t => {
+            tasksHtml += `<li style="color:#475569;font-size:13px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`;
+          });
+        }
+        let problemsHtml = '';
+        if (wr.problems) {
+          wr.problems.forEach(p => {
+            let imgs = '';
+            if (p.images && p.images.length > 0) {
+              imgs = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">' +
+                p.images.map(img => `<img src="${img}" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;">`).join('') +
+                '</div>';
+            }
+            problemsHtml += `<div style="margin-bottom:8px;page-break-inside:avoid;"><p style="color:#ec4899;font-size:13px;margin:0 0 4px;"><b>⚠ 问题：</b>${p.problem||'-'}</p><p style="color:#a855f7;font-size:13px;margin:0;"><b>✅ 解决办法：</b>${p.solution||'-'}</p>${imgs}</div>`;
+          });
+        }
+        let summaryImgs = '';
+        if (wr.summaryImages && wr.summaryImages.length > 0) {
+          summaryImgs = '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">' +
+            wr.summaryImages.map(img => `<img src="${img}" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;">`).join('') +
+            '</div>';
+        }
+        container.innerHTML = `
+          <h1 style="color:#1e293b;margin-bottom:8px;">周报 ${wr.weekLabel || ''}</h1>
+          <p style="color:#64748b;font-size:14px;margin-bottom:20px;">📅 ${wr.startDate||'-'} ~ ${wr.endDate||'-'}  ·  任务完成率：<b style="color:${pct===100?'#16a34a':'#ec4899'};">${pct}%</b> (${done}/${total})</p>
+          <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">✅ 本周任务</h2>
+          <ul style="margin:0;padding-left:20px;">${tasksHtml||'<li style="color:#94a3b8;">暂无任务</li>'}</ul>
+          <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">⚠️ 难点问题 & 解决办法</h2>
+          ${problemsHtml||'<p style="color:#94a3b8;font-size:13px;">暂无记录</p>'}
+          <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">📝 个人总结</h2>
+          <p style="color:#475569;font-size:14px;white-space:pre-wrap;line-height:1.7;">${wr.summary||'暂无总结'}</p>${summaryImgs}`;
+        document.body.appendChild(container);
+        await htmlToPDF(container, `周报_${wr.weekLabel||wr.startDate||'未命名'}.pdf`);
+        document.body.removeChild(container);
+      };
+
+      // 笔记 - 导出列表全部
+      const exportNotesListPDF = async () => {
+        const container = document.createElement('div');
+        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
+        container.innerHTML = `<h1 style="margin-bottom:16px;color:#1e293b;">笔记汇总</h1>
+          <p style="color:#94a3b8;margin-bottom:24px;">导出时间：${formatTime(Date.now())}  ·  共 ${activeNotes.value.length} 篇笔记</p>`;
+        activeNotes.value.forEach((n, i) => {
+          const div = document.createElement('div');
+          div.innerHTML = n.content || '';
+          const text = (div.textContent || '').slice(0, 500);
+          container.innerHTML += `
+            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;page-break-inside:avoid;">
+              <h3 style="color:#334155;margin:0 0 4px;">${i+1}. ${n.starred?'⭐':''}${n.pinned?'📌':''} ${n.title||'无标题'}</h3>
+              <p style="color:#64748b;font-size:12px;margin:0 0 8px;">📂 ${n.category||'-'}  ${(n.tags||[]).map(t=>'#'+t).join(' ')}  ·  ${formatTime(n.updatedAt)}</p>
+              <p style="color:#475569;font-size:13px;line-height:1.6;white-space:pre-wrap;">${text}${(n.content||'').length>500?'...':''}</p>
+            </div>`;
+        });
+        document.body.appendChild(container);
+        await htmlToPDF(container, `笔记汇总_${new Date().toISOString().slice(0,10)}.pdf`);
+        document.body.removeChild(container);
+      };
+
+      // 笔记 - 导出单条
+      const exportSingleNotePDF = async (note) => {
+        await exportNoteContentPDF(note);
+      };
+
+      // 笔记 - 导出当前编辑中的
+      const exportCurrentNotePDF = async () => {
+        if (quillInstance) noteForm.value.content = quillInstance.root.innerHTML;
+        await exportNoteContentPDF(noteForm.value);
+      };
+
+      const exportNoteContentPDF = async (note) => {
+        const container = document.createElement('div');
+        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
+        container.innerHTML = `
+          <h1 style="color:#1e293b;margin-bottom:4px;">${note.starred?'⭐ ':''}${note.pinned?'📌 ':''}${note.title||'无标题笔记'}</h1>
+          <p style="color:#94a3b8;font-size:12px;margin-bottom:20px;">
+            📂 ${note.category||'-'}  ${(note.tags||[]).map(t=>'#'+t).join(' ')}  ·  创建：${formatTime(note.createdAt)}  ·  修改：${formatTime(note.updatedAt)}
+            ${note.linkedWeekly ? ' · 🔗 关联周报' : ''}${note.linkedMeeting ? ' · 🔗 关联会议' : ''}
+          </p>
+          <hr style="border:none;border-top:1px solid #e2e8f0;margin-bottom:16px;">
+          <div style="color:#334155;font-size:14px;line-height:1.8;">${note.content||'<span style="color:#94a3b8;">空笔记</span>'}</div>`;
+        document.body.appendChild(container);
+        await htmlToPDF(container, `笔记_${note.title||'未命名'}.pdf`);
+        document.body.removeChild(container);
+      };
+
+      // ===== 持久化工具 =====
+      function loadFromStorage(key, defaultValue) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : defaultValue;
+        } catch (e) { return defaultValue; }
+      }
+
+      function saveToStorage(key, data) {
+        try {
+          localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+          showToast('存储空间不足，请清理旧数据', 'error');
+        }
+      }
+
+      // ===== 导航 =====
+      const tabs = [
+        { key: 'home', label: '首页', icon: '🏠' },
+        { key: 'meetings', label: '会议纪要', icon: '🎙️' },
+        { key: 'weekly', label: '周报管理', icon: '📋' },
+        { key: 'notes', label: '笔记中心', icon: '📝' }
+      ];
+
+      // ===== 初始化 =====
+      onMounted(() => {
+        // 数据已在 ref 初始化时加载
+      });
+
+      return {
+        currentTab, tabs, toast, showToast,
+        formatTime, genId,
+        // 会议
+        meetings, meetingSearch, filteredMeetings, showMeetingModal, editingMeeting, meetingForm,
+        resetMeetingForm, editMeeting, saveMeeting, deleteMeeting, addMeetingTodo, removeMeetingTodo, getMeetingTodoDisplay,
+        // 周报
+        weeklyReports, showWeeklyEditor, editingWeeklyId, weeklyForm,
+        weeklyTaskProgress, updateWeeklyProgress, getWeeklyProgress,
+        createNewWeekly, openWeekly, addWeeklyTask, addWeeklyProblem,
+        handleProblemImage, handleSummaryImage, saveWeekly, deleteWeekly,
+        // 笔记
+        notes, trash, showNoteEditor, editingNoteId, showTrash,
+        noteSearch, noteCategoryFilter, noteTagFilter, newTagInput,
+        noteCategories, allNoteTags, noteForm,
+        activeNotes, trashedNotes, starredNotes, filteredNotes, recentNotes,
+        getNotePreview, getCategoryColor,
+        createNewNote, editNote, addTagToNote, saveNote,
+        togglePin, toggleStar, trashNote, restoreNote, permanentlyDeleteNote,
+        exportNote,
+        // PDF 导出
+        exportMeetingsPDF, exportSingleMeetingPDF,
+        exportWeeklyListPDF, exportSingleWeeklyPDF, exportCurrentWeeklyPDF,
+        exportNotesListPDF, exportSingleNotePDF, exportCurrentNotePDF
+      };
+    }
+  });
+
+  app.mount('#app');
+  </script>
+</body>
+</html>
