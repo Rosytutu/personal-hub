@@ -1516,6 +1516,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     .slide-enter-from { transform: translateX(20px); opacity: 0; }
     .slide-leave-to { transform: translateX(-20px); opacity: 0; }
 
+    /* 轻量富文本编辑器样式 */
+    .rte-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 6px; border: 1px solid #e2e8f0; border-bottom: 0; border-radius: 6px 6px 0 0; background: #f8fafc; }
+    .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #475569; background: transparent; border: none; transition: all 0.12s; }
+    .rte-btn:hover { background: #e2e8f0; }
+    .rte-btn.active { background: #d8b4fe; color: #7e22ce; }
+    .rte-divider { width: 1px; height: 18px; background: #cbd5e1; margin: 4px 2px; }
+    .rte-editor { border: 1px solid #e2e8f0; border-radius: 0 0 6px 6px; padding: 8px 12px; min-height: 60px; font-size: 14px; line-height: 1.6; color: #334155; outline: none; }
+    .rte-editor:focus { border-color: #c084fc; box-shadow: 0 0 0 2px rgba(168,85,247,0.1); }
+    .rte-editor:empty:before { content: attr(data-placeholder); color: #94a3b8; }
+    .rte-editor img { max-width: 100%; border-radius: 6px; margin: 4px 0; }
+    .rte-editor ul, .rte-editor ol { padding-left: 1.5em; }
+
     /* 模态框遮罩 */
     .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; display: flex; align-items: center; justify-content: center; }
     .modal-container { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 720px; width: 92%; max-height: 85vh; overflow-y: auto; }
@@ -1749,7 +1761,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                 </div>
               </div>
               <div class="text-xs text-gray-500 mb-2">{{ m.date }} · {{ m.attendees || '-' }}</div>
-              <div class="text-sm text-gray-600 line-clamp-2 mb-3">{{ m.content || '无会议内容' }}</div>
+              <div class="text-sm text-gray-600 line-clamp-2 mb-3" v-html="m.content ? getPlainText(m.content) : '无会议内容'"></div>
               <div v-if="m.todos && m.todos.length > 0" class="border-t border-gray-100 pt-2">
                 <div class="text-xs text-gray-500 font-medium mb-1">待办事项：</div>
                 <div v-for="(todo, i) in getMeetingTodoDisplay(m).slice(0,3)" :key="i" class="text-xs" :class="todo.done ? 'text-gray-400 line-through' : 'text-gray-600'">{{ todo.done ? '✅' : '•' }} {{ todo.text }}</div>
@@ -1779,7 +1791,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">会议内容</label>
-                  <textarea v-model="meetingForm.content" rows="4" placeholder="记录会议讨论内容..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+                  <div class="rte-toolbar">
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'strikeThrough')" title="删除线"><s>S</s></button>
+                    <div class="rte-divider"></div>
+                    <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
+                    <div class="rte-divider"></div>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
+                    <div class="rte-divider"></div>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'formatBlock', 'h3')" title="标题">H</button>
+                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'removeFormat')" title="清除格式">⌫</button>
+                  </div>
+                  <div class="rte-editor" contenteditable="true" style="min-height:80px;" :data-placeholder="'记录会议讨论内容...'"
+                    @input="meetingForm.content = $event.target.innerHTML"
+                    v-html="meetingForm.content"></div>
                 </div>
                 <div>
                   <div class="flex items-center justify-between mb-1">
@@ -1913,8 +1941,38 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                     <span class="text-xs font-medium text-gray-500">问题 {{ i+1 }}</span>
                     <button @click="weeklyForm.problems.splice(i,1)" class="text-gray-300 hover:text-red-500 text-sm">✕</button>
                   </div>
-                  <textarea v-model="p.problem" placeholder="描述难点问题..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200 mb-2"></textarea>
-                  <textarea v-model="p.solution" placeholder="对应解决办法..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200"></textarea>
+                  <!-- 问题 - 富文本 -->
+                  <div class="mb-2">
+                    <div class="rte-toolbar">
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
+                      <div class="rte-divider"></div>
+                      <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
+                      <div class="rte-divider"></div>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
+                    </div>
+                    <div class="rte-editor" contenteditable="true" :data-placeholder="'描述难点问题...'"
+                      @input="p.problem = $event.target.innerHTML"
+                      v-html="p.problem"></div>
+                  </div>
+                  <!-- 解决办法 - 富文本 -->
+                  <div>
+                    <div class="rte-toolbar">
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
+                      <div class="rte-divider"></div>
+                      <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
+                      <div class="rte-divider"></div>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
+                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
+                    </div>
+                    <div class="rte-editor" contenteditable="true" :data-placeholder="'对应解决办法...'"
+                      @input="p.solution = $event.target.innerHTML"
+                      v-html="p.solution"></div>
+                  </div>
                   <!-- 问题图片 -->
                   <div class="mt-2">
                     <div class="flex flex-wrap gap-2">
@@ -1935,8 +1993,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <!-- 本周个人总结 -->
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
               <h3 class="text-md font-semibold text-gray-800 mb-3">📝 本周个人总结</h3>
-              <textarea v-model="weeklyForm.summary" placeholder="写下本周的个人总结、收获与反思..." rows="5"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+              <div class="rte-toolbar">
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'strikeThrough')" title="删除线"><s>S</s></button>
+                <div class="rte-divider"></div>
+                <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
+                <div class="rte-divider"></div>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
+                <div class="rte-divider"></div>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'formatBlock', 'h3')" title="标题">H</button>
+                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'removeFormat')" title="清除格式">⌫</button>
+              </div>
+              <div class="rte-editor" contenteditable="true" style="min-height:100px;" :data-placeholder="'写下本周的个人总结、收获与反思...'"
+                @input="weeklyForm.summary = $event.target.innerHTML"
+                v-html="weeklyForm.summary"></div>
               <!-- 总结图片 -->
               <div class="mt-3">
                 <div class="flex flex-wrap gap-2">
@@ -2191,6 +2264,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       const showToast = (message, type = 'success') => {
         toast.value = { show: true, message, type };
         setTimeout(() => { toast.value.show = false; }, 2000);
+      };
+
+      // 轻量富文本编辑器命令执行
+      const execRTE = (event, command, value = null) => {
+        // 找到对应的 contenteditable 编辑器（工具栏的下一个兄弟元素）
+        const toolbar = event.currentTarget.closest('.rte-toolbar');
+        if (!toolbar) return;
+        const editor = toolbar.nextElementSibling;
+        if (!editor || !editor.isContentEditable) return;
+        editor.focus();
+        document.execCommand(command, false, value);
       };
 
       // ===== 通用工具函数 =====
@@ -2521,6 +2605,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         div.innerHTML = content;
         const text = div.textContent || '';
         return text.slice(0, 150) + (text.length > 150 ? '...' : '');
+      };
+
+      // 从 HTML 中提取纯文本（用于预览）
+      const getPlainText = (html) => {
+        const div = document.createElement('div');
+        div.innerHTML = html || '';
+        return div.textContent || '';
       };
 
       const getCategoryColor = (cat) => {
@@ -3008,7 +3099,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       });
 
       return {
-        currentTab, tabs, toast, showToast,
+        currentTab, tabs, toast, showToast, execRTE,
         // 日历
         calendarYear, calendarMonth, selectedCalendarDate, calendarCells,
         prevMonth, nextMonth, goToday, selectCalendarDate, getCalendarEvents, getCalendarCellClass,
@@ -3026,7 +3117,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         noteSearch, noteCategoryFilter, noteTagFilter, newTagInput,
         noteCategories, allNoteTags, noteForm,
         activeNotes, trashedNotes, starredNotes, filteredNotes, groupedFilteredNotes, noteCategoriesWithCount, recentNotes,
-        getNotePreview, getCategoryColor, getCategoryIcon,
+        getNotePreview, getPlainText, getCategoryColor, getCategoryIcon,
         createNewNote, editNote, addTagToNote, saveNote,
         togglePin, toggleStar, trashNote, restoreNote, permanentlyDeleteNote,
         exportNote,
