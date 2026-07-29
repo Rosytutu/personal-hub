@@ -59,18 +59,6 @@
     .slide-enter-from { transform: translateX(20px); opacity: 0; }
     .slide-leave-to { transform: translateX(-20px); opacity: 0; }
 
-    /* 轻量富文本编辑器样式 */
-    .rte-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 6px; border: 1px solid #e2e8f0; border-bottom: 0; border-radius: 6px 6px 0 0; background: #f8fafc; }
-    .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #475569; background: transparent; border: none; transition: all 0.12s; }
-    .rte-btn:hover { background: #e2e8f0; }
-    .rte-btn.active { background: #d8b4fe; color: #7e22ce; }
-    .rte-divider { width: 1px; height: 18px; background: #cbd5e1; margin: 4px 2px; }
-    .rte-editor { border: 1px solid #e2e8f0; border-radius: 0 0 6px 6px; padding: 8px 12px; min-height: 60px; font-size: 14px; line-height: 1.6; color: #334155; outline: none; }
-    .rte-editor:focus { border-color: #c084fc; box-shadow: 0 0 0 2px rgba(168,85,247,0.1); }
-    .rte-editor:empty:before { content: attr(data-placeholder); color: #94a3b8; }
-    .rte-editor img { max-width: 100%; border-radius: 6px; margin: 4px 0; }
-    .rte-editor ul, .rte-editor ol { padding-left: 1.5em; }
-
     /* 模态框遮罩 */
     .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; display: flex; align-items: center; justify-content: center; }
     .modal-container { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 720px; width: 92%; max-height: 85vh; overflow-y: auto; }
@@ -138,40 +126,50 @@
       <!-- ===== 首页仪表盘 ===== -->
       <transition name="slide" mode="out-in">
         <div v-if="currentTab === 'home'" key="home" class="space-y-6">
-          <h2 class="text-2xl font-bold text-gray-800">📊 工作概览</h2>
+          <!-- 渐变欢迎横幅 -->
+          <div class="bg-gradient-to-r from-primary-500 via-primary-400 to-accent-400 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div class="absolute bottom-0 right-20 w-24 h-24 bg-accent-300/20 rounded-full -mb-8"></div>
+            <div class="relative z-10">
+              <h2 class="text-2xl font-bold text-white mb-1">✨ 欢迎回来</h2>
+              <p class="text-primary-100 text-sm">{{ getGreeting() }}，这是你的工作概览</p>
+            </div>
+          </div>
+
+          <!-- 统计卡片 -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- 周报快速入口卡片 -->
-            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" @click="currentTab='weekly'">
+            <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-5 shadow-sm border border-primary-200 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer" @click="currentTab='weekly'">
               <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-xl">📋</div>
+                <div class="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-xl shadow-md">📋</div>
                 <div>
-                  <div class="text-sm text-gray-500">周报管理</div>
-                  <div class="text-2xl font-bold text-gray-800">{{ weeklyReports.length }}</div>
+                  <div class="text-sm text-primary-600 font-medium">周报管理</div>
+                  <div class="text-3xl font-bold text-primary-800">{{ weeklyReports.length }}</div>
                 </div>
               </div>
-              <p class="text-xs text-gray-400">共 {{ weeklyReports.length }} 份周报 · 点击进入</p>
+              <p class="text-xs text-primary-400">共 {{ weeklyReports.length }} 份周报 · 点击进入 →</p>
             </div>
             <!-- 笔记统计卡片 -->
-            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" @click="currentTab='notes'">
+            <div class="bg-gradient-to-br from-accent-50 to-accent-100 rounded-xl p-5 shadow-sm border border-accent-200 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer" @click="currentTab='notes'">
               <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center text-xl">📝</div>
+                <div class="w-12 h-12 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl flex items-center justify-center text-xl shadow-md">📝</div>
                 <div>
-                  <div class="text-sm text-gray-500">笔记中心</div>
-                  <div class="text-2xl font-bold text-gray-800">{{ activeNotes.length }}</div>
+                  <div class="text-sm text-accent-600 font-medium">笔记中心</div>
+                  <div class="text-3xl font-bold text-accent-800">{{ activeNotes.length }}</div>
                 </div>
               </div>
-              <p class="text-xs text-gray-400">{{ starredNotes.length }} 篇收藏 · 点击进入</p>
+              <p class="text-xs text-accent-400">{{ starredNotes.length }} 篇收藏 · 点击进入 →</p>
             </div>
             <!-- 会议统计卡片 -->
-            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" @click="currentTab='meetings'">
+            <div class="bg-gradient-to-br from-violet-50 to-fuchsia-100 rounded-xl p-5 shadow-sm border border-fuchsia-200 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer" @click="currentTab='meetings'">
               <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-xl">🎙️</div>
+                <div class="w-12 h-12 bg-gradient-to-br from-violet-400 to-fuchsia-600 rounded-xl flex items-center justify-center text-xl shadow-md">🎙️</div>
                 <div>
-                  <div class="text-sm text-gray-500">会议纪要</div>
-                  <div class="text-2xl font-bold text-gray-800">{{ meetings.length }}</div>
+                  <div class="text-sm text-fuchsia-600 font-medium">会议纪要</div>
+                  <div class="text-3xl font-bold text-fuchsia-800">{{ meetings.length }}</div>
                 </div>
               </div>
-              <p class="text-xs text-gray-400">共 {{ meetings.length }} 场会议 · 点击进入</p>
+              <p class="text-xs text-fuchsia-400">共 {{ meetings.length }} 场会议 · 点击进入 →</p>
             </div>
           </div>
 
@@ -334,23 +332,7 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">会议内容</label>
-                  <div class="rte-toolbar">
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'strikeThrough')" title="删除线"><s>S</s></button>
-                    <div class="rte-divider"></div>
-                    <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
-                    <div class="rte-divider"></div>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
-                    <div class="rte-divider"></div>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'formatBlock', 'h3')" title="标题">H</button>
-                    <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'removeFormat')" title="清除格式">⌫</button>
-                  </div>
-                  <div class="rte-editor" contenteditable="true" style="min-height:80px;" :data-placeholder="'记录会议讨论内容...'"
-                    @input="meetingForm.content = $event.target.innerHTML"
-                    v-html="meetingForm.content"></div>
+                  <textarea v-model="meetingForm.content" rows="4" placeholder="记录会议讨论内容..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
                 </div>
                 <div>
                   <div class="flex items-center justify-between mb-1">
@@ -484,38 +466,8 @@
                     <span class="text-xs font-medium text-gray-500">问题 {{ i+1 }}</span>
                     <button @click="weeklyForm.problems.splice(i,1)" class="text-gray-300 hover:text-red-500 text-sm">✕</button>
                   </div>
-                  <!-- 问题 - 富文本 -->
-                  <div class="mb-2">
-                    <div class="rte-toolbar">
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
-                      <div class="rte-divider"></div>
-                      <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
-                      <div class="rte-divider"></div>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
-                    </div>
-                    <div class="rte-editor" contenteditable="true" :data-placeholder="'描述难点问题...'"
-                      @input="p.problem = $event.target.innerHTML"
-                      v-html="p.problem"></div>
-                  </div>
-                  <!-- 解决办法 - 富文本 -->
-                  <div>
-                    <div class="rte-toolbar">
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
-                      <div class="rte-divider"></div>
-                      <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
-                      <div class="rte-divider"></div>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
-                      <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
-                    </div>
-                    <div class="rte-editor" contenteditable="true" :data-placeholder="'对应解决办法...'"
-                      @input="p.solution = $event.target.innerHTML"
-                      v-html="p.solution"></div>
-                  </div>
+                  <textarea v-model="p.problem" placeholder="描述难点问题..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200 mb-2"></textarea>
+                  <textarea v-model="p.solution" placeholder="对应解决办法..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200"></textarea>
                   <!-- 问题图片 -->
                   <div class="mt-2">
                     <div class="flex flex-wrap gap-2">
@@ -536,23 +488,8 @@
             <!-- 本周个人总结 -->
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
               <h3 class="text-md font-semibold text-gray-800 mb-3">📝 本周个人总结</h3>
-              <div class="rte-toolbar">
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'bold')" title="加粗"><b>B</b></button>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'italic')" title="斜体"><i>I</i></button>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'underline')" title="下划线"><u>U</u></button>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'strikeThrough')" title="删除线"><s>S</s></button>
-                <div class="rte-divider"></div>
-                <input type="color" class="w-6 h-6 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event, 'foreColor', $event.target.value)" title="字体颜色">
-                <div class="rte-divider"></div>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertUnorderedList')" title="无序列表">•</button>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'insertOrderedList')" title="有序列表">1.</button>
-                <div class="rte-divider"></div>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'formatBlock', 'h3')" title="标题">H</button>
-                <button type="button" class="rte-btn" @mousedown.prevent="execRTE($event, 'removeFormat')" title="清除格式">⌫</button>
-              </div>
-              <div class="rte-editor" contenteditable="true" style="min-height:100px;" :data-placeholder="'写下本周的个人总结、收获与反思...'"
-                @input="weeklyForm.summary = $event.target.innerHTML"
-                v-html="weeklyForm.summary"></div>
+              <textarea v-model="weeklyForm.summary" placeholder="写下本周的个人总结、收获与反思..." rows="5"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
               <!-- 总结图片 -->
               <div class="mt-3">
                 <div class="flex flex-wrap gap-2">
@@ -826,6 +763,17 @@
         if (!ts) return '-';
         const d = new Date(ts);
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      };
+
+      // 根据时间返回问候语
+      const getGreeting = () => {
+        const h = new Date().getHours();
+        if (h < 6) return '夜深了';
+        if (h < 12) return '早上好';
+        if (h < 14) return '中午好';
+        if (h < 18) return '下午好';
+        if (h < 22) return '晚上好';
+        return '夜深了';
       };
 
       // 图片转 base64
@@ -1646,7 +1594,7 @@
         // 日历
         calendarYear, calendarMonth, selectedCalendarDate, calendarCells,
         prevMonth, nextMonth, goToday, selectCalendarDate, getCalendarEvents, getCalendarCellClass,
-        formatTime, genId,
+        formatTime, genId, getGreeting,
         // 会议
         meetings, meetingSearch, filteredMeetings, showMeetingModal, editingMeeting, meetingForm,
         resetMeetingForm, editMeeting, saveMeeting, deleteMeeting, addMeetingTodo, removeMeetingTodo, getMeetingTodoDisplay,
