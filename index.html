@@ -1832,28 +1832,41 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             暂无周报，点击上方按钮创建第一份周报
           </div>
           
-          <!-- 历史周报列表（非编辑模式） -->
-          <div v-if="!showWeeklyEditor && weeklyReports.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div v-for="wr in weeklyReports" :key="wr.id"
-              class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
-              @click="openWeekly(wr)">
-              <div class="flex items-start justify-between mb-2">
-                <div>
-                  <h3 class="font-semibold text-gray-800">{{ wr.weekLabel || ('周报 ' + wr.startDate + ' ~ ' + wr.endDate) }}</h3>
-                  <div class="text-xs text-gray-500 mt-1">{{ wr.startDate }} ~ {{ wr.endDate }}</div>
-                </div>
-                <div class="flex gap-1">
-                  <button @click.stop="exportSingleWeeklyPDF(wr)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="导出PDF">📄</button>
-                  <button @click.stop="deleteWeekly(wr.id)" class="text-gray-400 hover:text-red-600 text-sm p-1">🗑️</button>
+          <!-- 历史周报列表 - 按月分组（非编辑模式） -->
+          <div v-if="!showWeeklyEditor && weeklyReports.length > 0" class="space-y-4">
+            <div v-for="group in groupedWeeklyReports" :key="group.key">
+              <!-- 月份标题栏 -->
+              <div @click="toggleMonthCollapse(group.key)"
+                class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-50 to-accent-50 rounded-xl cursor-pointer hover:from-primary-100 hover:to-accent-100 transition-colors">
+                <span class="text-sm">📂</span>
+                <span class="font-semibold text-primary-700 text-sm">{{ group.label }}</span>
+                <span class="text-xs text-primary-400">({{ group.reports.length }} 份)</span>
+                <span class="ml-auto text-gray-400 text-xs transition-transform duration-200" :class="collapsedMonths[group.key] ? '' : 'rotate-90'">▶</span>
+              </div>
+              <!-- 该月下的周报卡片 -->
+              <div v-show="!collapsedMonths[group.key]" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <div v-for="wr in group.reports" :key="wr.id"
+                  class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                  @click="openWeekly(wr)">
+                  <div class="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 class="font-semibold text-gray-800">{{ wr.weekLabel || ('周报 ' + wr.startDate + ' ~ ' + wr.endDate) }}</h3>
+                      <div class="text-xs text-gray-500 mt-1">{{ wr.startDate }} ~ {{ wr.endDate }}</div>
+                    </div>
+                    <div class="flex gap-1">
+                      <button @click.stop="exportSingleWeeklyPDF(wr)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="导出PDF">📄</button>
+                      <button @click.stop="deleteWeekly(wr.id)" class="text-gray-400 hover:text-red-600 text-sm p-1">🗑️</button>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 mt-3">
+                    <div class="flex-1 bg-gray-100 rounded-full h-2">
+                      <div class="h-2 rounded-full transition-all" :class="getWeeklyProgress(wr)===100?'bg-green-500':'bg-accent-400'" :style="{width: getWeeklyProgress(wr)+'%'}"></div>
+                    </div>
+                    <span class="text-xs font-medium" :class="getWeeklyProgress(wr)===100?'text-green-600':'text-gray-600'">{{ getWeeklyProgress(wr) }}%</span>
+                  </div>
+                  <div class="text-xs text-gray-400 mt-2">任务：{{ wr.tasks ? wr.tasks.filter(t=>t.done).length : 0 }}/{{ wr.tasks ? wr.tasks.length : 0 }}</div>
                 </div>
               </div>
-              <div class="flex items-center gap-3 mt-3">
-                <div class="flex-1 bg-gray-100 rounded-full h-2">
-                  <div class="h-2 rounded-full transition-all" :class="getWeeklyProgress(wr)===100?'bg-green-500':'bg-accent-400'" :style="{width: getWeeklyProgress(wr)+'%'}"></div>
-                </div>
-                <span class="text-xs font-medium" :class="getWeeklyProgress(wr)===100?'text-green-600':'text-gray-600'">{{ getWeeklyProgress(wr) }}%</span>
-              </div>
-              <div class="text-xs text-gray-400 mt-2">任务：{{ wr.tasks ? wr.tasks.filter(t=>t.done).length : 0 }}/{{ wr.tasks ? wr.tasks.length : 0 }}</div>
             </div>
           </div>
 
@@ -2336,6 +2349,29 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         const done = wr.tasks.filter(t => t.done).length;
         return Math.round((done / wr.tasks.length) * 100);
       };
+
+      // 按月分组周报
+      const collapsedMonths = ref({});
+
+      const toggleMonthCollapse = (key) => {
+        collapsedMonths.value[key] = !collapsedMonths.value[key];
+      };
+
+      const groupedWeeklyReports = computed(() => {
+        const groups = {};
+        weeklyReports.value.forEach(wr => {
+          // 用起始日期的年月作为分组键
+          const dateStr = wr.startDate || '';
+          const [year, month] = dateStr.split('-');
+          if (!year || !month) return;
+          const key = `${year}-${month}`;
+          const label = `${year}年${parseInt(month)}月`;
+          if (!groups[key]) groups[key] = { key, label, reports: [] };
+          groups[key].reports.push(wr);
+        });
+        // 按月份倒序排列（最新月份在最上面）
+        return Object.values(groups).sort((a, b) => b.key.localeCompare(a.key));
+      });
 
       const resetWeeklyForm = () => {
         const now = new Date();
@@ -3055,7 +3091,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         resetMeetingForm, editMeeting, saveMeeting, deleteMeeting, addMeetingTodo, removeMeetingTodo, getMeetingTodoDisplay,
         // 周报
         weeklyReports, showWeeklyEditor, editingWeeklyId, weeklyForm,
-        weeklyTaskProgress, updateWeeklyProgress, getWeeklyProgress,
+        weeklyTaskProgress, updateWeeklyProgress, getWeeklyProgress, groupedWeeklyReports, collapsedMonths, toggleMonthCollapse,
         createNewWeekly, openWeekly, addWeeklyTask, addWeeklyProblem,
         handleProblemImage, handleSummaryImage, saveWeekly, deleteWeekly,
         // 笔记
