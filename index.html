@@ -1620,6 +1620,62 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             </div>
           </div>
 
+          <!-- 🎀 可爱日历组件 -->
+          <div class="bg-gradient-to-br from-primary-50 to-accent-50 rounded-2xl p-5 shadow-sm border border-primary-100">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">🌸</span>
+                <h3 class="text-lg font-bold text-primary-700">{{ calendarYear }}年{{ calendarMonth+1 }}月</h3>
+              </div>
+              <div class="flex items-center gap-1">
+                <button @click="prevMonth" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/60 hover:bg-primary-100 text-primary-600 transition-colors text-sm">‹</button>
+                <button @click="goToday" class="px-3 h-8 flex items-center justify-center rounded-full bg-white/60 hover:bg-accent-100 text-accent-600 transition-colors text-xs font-medium">今天</button>
+                <button @click="nextMonth" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/60 hover:bg-primary-100 text-primary-600 transition-colors text-sm">›</button>
+              </div>
+            </div>
+            <!-- 星期标题 -->
+            <div class="grid grid-cols-7 gap-1 mb-2">
+              <div v-for="day in ['日','一','二','三','四','五','六']" :key="day"
+                class="text-center text-xs font-semibold py-1"
+                :class="day==='日' || day==='六' ? 'text-accent-400' : 'text-primary-400'">{{ day }}</div>
+            </div>
+            <!-- 日期格子 -->
+            <div class="grid grid-cols-7 gap-1">
+              <div v-for="(cell, i) in calendarCells" :key="i"
+                @click="cell.date && selectCalendarDate(cell.date)"
+                class="aspect-square flex flex-col items-center justify-center rounded-xl text-sm transition-all cursor-pointer relative"
+                :class="getCalendarCellClass(cell)">
+                <span class="font-medium" :class="cell.isToday ? 'font-bold' : ''">{{ cell.day || '' }}</span>
+                <!-- 事件标记点 -->
+                <div v-if="cell.date && getCalendarEvents(cell.date).length > 0" class="flex gap-0.5 mt-0.5">
+                  <span v-for="(evt, j) in getCalendarEvents(cell.date).slice(0,3)" :key="j"
+                    class="w-1.5 h-1.5 rounded-full"
+                    :style="{background: evt.color}"></span>
+                </div>
+                <!-- 选中标记 -->
+                <span v-if="cell.date && cell.date === selectedCalendarDate" class="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary-500"></span>
+              </div>
+            </div>
+            <!-- 当日事件列表 -->
+            <div v-if="selectedCalendarDate" class="mt-4 pt-3 border-t border-primary-100">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm">📅</span>
+                <span class="text-sm font-medium text-primary-700">{{ selectedCalendarDate }} 的事件</span>
+              </div>
+              <div v-if="getCalendarEvents(selectedCalendarDate).length === 0" class="text-xs text-gray-400 py-2">这天没有事件记录~</div>
+              <div v-else class="space-y-2">
+                <div v-for="(evt, i) in getCalendarEvents(selectedCalendarDate)" :key="i"
+                  class="flex items-center gap-2 p-2 bg-white/60 rounded-lg">
+                  <span class="w-2 h-2 rounded-full shrink-0" :style="{background: evt.color}"></span>
+                  <span class="text-xs text-gray-700 flex-1 truncate">{{ evt.title }}</span>
+                  <span class="text-xs text-gray-400">{{ evt.type }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 最近笔记 + 近期会议 双栏 -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- 最近笔记 -->
           <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <h3 class="text-lg font-semibold text-gray-800 mb-3">📌 最近更新的笔记</h3>
@@ -1655,6 +1711,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                 <span class="text-xs text-gray-400">{{ m.todos ? m.todos.length : 0 }} 项待办</span>
               </div>
             </div>
+          </div>
           </div>
         </div>
 
@@ -2836,6 +2893,110 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         }
       }
 
+      // ===== 可爱日历组件 =====
+      const calendarYear = ref(new Date().getFullYear());
+      const calendarMonth = ref(new Date().getMonth());
+      const selectedCalendarDate = ref(new Date().toISOString().slice(0, 10));
+
+      const prevMonth = () => {
+        if (calendarMonth.value === 0) {
+          calendarMonth.value = 11;
+          calendarYear.value--;
+        } else {
+          calendarMonth.value--;
+        }
+      };
+
+      const nextMonth = () => {
+        if (calendarMonth.value === 11) {
+          calendarMonth.value = 0;
+          calendarYear.value++;
+        } else {
+          calendarMonth.value++;
+        }
+      };
+
+      const goToday = () => {
+        const now = new Date();
+        calendarYear.value = now.getFullYear();
+        calendarMonth.value = now.getMonth();
+        selectedCalendarDate.value = now.toISOString().slice(0, 10);
+      };
+
+      const selectCalendarDate = (dateStr) => {
+        selectedCalendarDate.value = dateStr;
+      };
+
+      // 日历格子数据（含前后月补位）
+      const calendarCells = computed(() => {
+        const year = calendarYear.value;
+        const month = calendarMonth.value;
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const prevMonthDays = new Date(year, month, 0).getDate();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const cells = [];
+
+        // 上月补位
+        for (let i = firstDay - 1; i >= 0; i--) {
+          const day = prevMonthDays - i;
+          const m = month === 0 ? 12 : month;
+          const y = month === 0 ? year - 1 : year;
+          cells.push({ day, date: `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`, isPrev: true, isToday: false });
+        }
+        // 本月
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          cells.push({ day, date: dateStr, isPrev: false, isToday: dateStr === todayStr });
+        }
+        // 下月补位
+        const remaining = 42 - cells.length; // 6行 x 7列
+        for (let day = 1; day <= remaining; day++) {
+          const m = month === 11 ? 1 : month + 2;
+          const y = month === 11 ? year + 1 : year;
+          cells.push({ day, date: `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`, isNext: true, isToday: false });
+        }
+        return cells;
+      });
+
+      // 获取某日的事件（会议、周报起止日、笔记更新）
+      const getCalendarEvents = (dateStr) => {
+        const events = [];
+        // 会议
+        meetings.value.forEach(m => {
+          if (m.date === dateStr) {
+            events.push({ title: m.title || '会议', type: '会议', color: '#a855f7' });
+          }
+        });
+        // 周报起止
+        weeklyReports.value.forEach(wr => {
+          if (wr.startDate === dateStr) events.push({ title: wr.weekLabel || '周报开始', type: '周报', color: '#ec4899' });
+          if (wr.endDate === dateStr) events.push({ title: wr.weekLabel || '周报结束', type: '周报', color: '#f472b6' });
+        });
+        // 笔记更新
+        activeNotes.value.forEach(n => {
+          if (n.updatedAt) {
+            const d = new Date(n.updatedAt);
+            const noteDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (noteDate === dateStr) {
+              events.push({ title: n.title || '笔记更新', type: '笔记', color: '#c084fc' });
+            }
+          }
+        });
+        return events;
+      };
+
+      // 日历格子样式
+      const getCalendarCellClass = (cell) => {
+        if (!cell.date) return '';
+        const classes = [];
+        if (cell.isPrev || cell.isNext) classes.push('text-gray-300', 'bg-transparent');
+        else if (cell.isToday) classes.push('bg-gradient-to-br', 'from-primary-400', 'to-accent-400', 'text-white', 'shadow-md');
+        else if (cell.date === selectedCalendarDate.value) classes.push('bg-primary-100', 'text-primary-700', 'ring-2', 'ring-primary-300');
+        else classes.push('text-gray-700', 'bg-white/40', 'hover:bg-primary-50');
+        return classes.join(' ');
+      };
+
       // ===== 导航 =====
       const tabs = [
         { key: 'home', label: '首页', icon: '🏠' },
@@ -2851,6 +3012,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
       return {
         currentTab, tabs, toast, showToast,
+        // 日历
+        calendarYear, calendarMonth, selectedCalendarDate, calendarCells,
+        prevMonth, nextMonth, goToday, selectCalendarDate, getCalendarEvents, getCalendarCellClass,
         formatTime, genId,
         // 会议
         meetings, meetingSearch, filteredMeetings, showMeetingModal, editingMeeting, meetingForm,
