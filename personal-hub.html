@@ -504,42 +504,92 @@
                 </div>
               </div>
             </div>
-            <!-- 正常笔记列表 -->
-            <div v-else>
-              <div v-if="filteredNotes.length === 0" class="text-center py-12 text-gray-400">
-                暂无笔记，点击"+ 新建笔记"开始
+            <!-- 正常笔记列表 - 文件夹式布局 -->
+            <div v-else class="flex gap-4">
+              <!-- 左侧：文件夹列表 -->
+              <div class="w-48 shrink-0 hidden md:block">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-20">
+                  <div class="px-3 py-2 border-b border-gray-100">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">📂 文件夹</span>
+                  </div>
+                  <div class="py-1">
+                    <div v-for="cat in noteCategoriesWithCount" :key="cat.name"
+                      @click="noteCategoryFilter = noteCategoryFilter===cat.name ? '' : cat.name"
+                      :class="[
+                        'flex items-center justify-between px-3 py-2 text-sm cursor-pointer transition-colors hover:bg-gray-50',
+                        noteCategoryFilter === cat.name ? 'bg-primary-50 text-primary-600 font-medium' : 'text-gray-700'
+                      ]">
+                      <div class="flex items-center gap-2">
+                        <span :style="{color: getCategoryColor(cat.name)}">{{ getCategoryIcon(cat.name) }}</span>
+                        <span class="truncate">{{ cat.name }}</span>
+                      </div>
+                      <span class="text-xs" :class="noteCategoryFilter===cat.name ? 'text-primary-400' : 'text-gray-400'">{{ cat.count }}</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- 标签筛选 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-3 sticky top-60">
+                  <div class="px-3 py-2 border-b border-gray-100">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">🏷️ 标签</span>
+                  </div>
+                  <div class="p-2 flex flex-wrap gap-1">
+                    <span v-for="tag in allNoteTags" :key="tag"
+                      @click="noteTagFilter = noteTagFilter===tag ? '' : tag"
+                      :class="[
+                        'tag-badge cursor-pointer',
+                        noteTagFilter === tag ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ]">{{ tag }}</span>
+                    <span v-if="allNoteTags.length === 0" class="text-xs text-gray-400 px-1">暂无标签</span>
+                  </div>
+                </div>
               </div>
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div v-for="note in filteredNotes" :key="note.id"
-                  class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
-                  :class="note.pinned ? 'border-primary-300 ring-1 ring-primary-100' : ''"
-                  @click="editNote(note)">
-                  <div class="flex items-start justify-between mb-2">
-                    <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                      <span v-if="note.pinned" class="text-xs">📌</span>
-                      <span v-if="note.starred" class="text-xs">⭐</span>
-                      <h3 class="font-semibold text-gray-800 text-sm truncate">{{ note.title || '无标题笔记' }}</h3>
+
+              <!-- 右侧：笔记列表 -->
+              <div class="flex-1 min-w-0">
+                <div v-if="filteredNotes.length === 0" class="text-center py-12 text-gray-400">
+                  暂无笔记，点击"+ 新建笔记"开始
+                </div>
+                <!-- 按分类分组显示 -->
+                <div v-else>
+                  <template v-for="group in groupedFilteredNotes" :key="group.category">
+                    <div class="flex items-center gap-2 mb-3 mt-5 first:mt-0">
+                      <span :style="{color: getCategoryColor(group.category)}" class="text-lg">{{ getCategoryIcon(group.category) }}</span>
+                      <h3 class="text-sm font-semibold text-gray-700">{{ group.category }}</h3>
+                      <span class="text-xs text-gray-400">({{ group.notes.length }})</span>
                     </div>
-                    <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                      <button @click.stop="exportSingleNotePDF(note)" class="text-gray-400 hover:text-blue-600 text-xs p-1" title="导出PDF">📄</button>
-                      <button @click.stop="togglePin(note)" class="text-gray-400 hover:text-primary-500 text-xs p-1" :title="note.pinned?'取消置顶':'置顶'">📌</button>
-                      <button @click.stop="toggleStar(note)" class="text-gray-400 hover:text-yellow-500 text-xs p-1" :title="note.starred?'取消收藏':'收藏'">⭐</button>
-                      <button @click.stop="trashNote(note.id)" class="text-gray-400 hover:text-red-600 text-xs p-1">🗑️</button>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                      <div v-for="note in group.notes" :key="note.id"
+                        class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
+                        :class="note.pinned ? 'border-primary-300 ring-1 ring-primary-100' : ''"
+                        @click="editNote(note)">
+                        <div class="flex items-start justify-between mb-2">
+                          <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                            <span v-if="note.pinned" class="text-xs">📌</span>
+                            <span v-if="note.starred" class="text-xs">⭐</span>
+                            <h3 class="font-semibold text-gray-800 text-sm truncate">{{ note.title || '无标题笔记' }}</h3>
+                          </div>
+                          <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                            <button @click.stop="exportSingleNotePDF(note)" class="text-gray-400 hover:text-blue-600 text-xs p-1" title="导出PDF">📄</button>
+                            <button @click.stop="togglePin(note)" class="text-gray-400 hover:text-primary-500 text-xs p-1" :title="note.pinned?'取消置顶':'置顶'">📌</button>
+                            <button @click.stop="toggleStar(note)" class="text-gray-400 hover:text-yellow-500 text-xs p-1" :title="note.starred?'取消收藏':'收藏'">⭐</button>
+                            <button @click.stop="trashNote(note.id)" class="text-gray-400 hover:text-red-600 text-xs p-1">🗑️</button>
+                          </div>
+                        </div>
+                        <!-- 标签 -->
+                        <div class="flex flex-wrap gap-1 mb-2">
+                          <span v-for="tag in (note.tags||[])" :key="tag" class="tag-badge bg-gray-100 text-gray-600">{{ tag }}</span>
+                        </div>
+                        <!-- 内容预览 -->
+                        <div class="text-xs text-gray-500 line-clamp-2 whitespace-pre-line">{{ getNotePreview(note.content) }}</div>
+                        <!-- 关联信息 -->
+                        <div v-if="note.linkedWeekly || note.linkedMeeting" class="flex gap-2 mt-2 text-xs">
+                          <span v-if="note.linkedWeekly" class="text-primary-500">🔗 关联周报</span>
+                          <span v-if="note.linkedMeeting" class="text-accent-500">🔗 关联会议</span>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-2">{{ formatTime(note.updatedAt) }}</div>
+                      </div>
                     </div>
-                  </div>
-                  <!-- 分类和标签 -->
-                  <div class="flex flex-wrap gap-1 mb-2">
-                    <span class="text-xs px-2 py-0.5 rounded-full" :style="{background: getCategoryColor(note.category)+'20', color: getCategoryColor(note.category)}">{{ note.category }}</span>
-                    <span v-for="tag in (note.tags||[])" :key="tag" class="tag-badge bg-gray-100 text-gray-600">{{ tag }}</span>
-                  </div>
-                  <!-- 内容预览 -->
-                  <div class="text-xs text-gray-500 line-clamp-3 whitespace-pre-line">{{ getNotePreview(note.content) }}</div>
-                  <!-- 关联信息 -->
-                  <div v-if="note.linkedWeekly || note.linkedMeeting" class="flex gap-2 mt-2 text-xs">
-                    <span v-if="note.linkedWeekly" class="text-primary-500">🔗 关联周报</span>
-                    <span v-if="note.linkedMeeting" class="text-accent-500">🔗 关联会议</span>
-                  </div>
-                  <div class="text-xs text-gray-400 mt-3">{{ formatTime(note.updatedAt) }}</div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -923,6 +973,32 @@
           return (b.updatedAt || 0) - (a.updatedAt || 0);
         });
       });
+
+      // 按分类分组（文件夹视图用）
+      const groupedFilteredNotes = computed(() => {
+        const groups = {};
+        noteCategories.forEach(cat => { groups[cat] = []; });
+        filteredNotes.value.forEach(n => {
+          const cat = n.category || '工作';
+          if (!groups[cat]) groups[cat] = [];
+          groups[cat].push(n);
+        });
+        return noteCategories.map(cat => ({ category: cat, notes: groups[cat] || [] }));
+      });
+
+      // 每个分类的笔记数量
+      const noteCategoriesWithCount = computed(() => {
+        return noteCategories.map(cat => ({
+          name: cat,
+          count: activeNotes.value.filter(n => n.category === cat).length
+        }));
+      });
+
+      // 分类图标
+      const getCategoryIcon = (cat) => {
+        const icons = { '工作': '💼', '学习': '📚', '生活': '🏡', '项目': '🚀', '知识库': '🧠' };
+        return icons[cat] || '📄';
+      };
 
       const recentNotes = computed(() => {
         return [...activeNotes.value].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -1331,8 +1407,8 @@
         notes, trash, showNoteEditor, editingNoteId, showTrash,
         noteSearch, noteCategoryFilter, noteTagFilter, newTagInput,
         noteCategories, allNoteTags, noteForm,
-        activeNotes, trashedNotes, starredNotes, filteredNotes, recentNotes,
-        getNotePreview, getCategoryColor,
+        activeNotes, trashedNotes, starredNotes, filteredNotes, groupedFilteredNotes, noteCategoriesWithCount, recentNotes,
+        getNotePreview, getCategoryColor, getCategoryIcon,
         createNewNote, editNote, addTagToNote, saveNote,
         togglePin, toggleStar, trashNote, restoreNote, permanentlyDeleteNote,
         exportNote,
