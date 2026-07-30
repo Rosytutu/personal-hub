@@ -1743,7 +1743,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <div class="flex gap-2">
               <button @click="exportMeetingsPDF"
                 class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                📄 导出PDF
+                🖨️ 打印预览
               </button>
               <button @click="showMeetingModal = true; editingMeeting = null; resetMeetingForm()"
                 class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
@@ -1767,7 +1767,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
               <div class="flex items-start justify-between mb-2">
                 <h3 class="font-semibold text-gray-800 flex-1 min-w-0">{{ m.title }}</h3>
                 <div class="flex gap-1 ml-2">
-                  <button @click="exportSingleMeetingPDF(m)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="导出PDF">📄</button>
+                  <button @click="exportSingleMeetingPDF(m)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="打印预览">🖨️</button>
                   <button @click="editMeeting(m)" class="text-gray-400 hover:text-primary-500 text-sm p-1">✏️</button>
                   <button @click="deleteMeeting(m.id)" class="text-gray-400 hover:text-red-600 text-sm p-1">🗑️</button>
                 </div>
@@ -1849,7 +1849,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <div class="flex gap-2">
               <button @click="exportWeeklyListPDF"
                 class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                📄 导出全部PDF
+                🖨️ 打印预览
               </button>
               <button @click="createNewWeekly()"
                 class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
@@ -1884,7 +1884,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                       <div class="text-xs text-gray-500 mt-1">{{ wr.startDate }} ~ {{ wr.endDate }}</div>
                     </div>
                     <div class="flex gap-1">
-                      <button @click.stop="exportSingleWeeklyPDF(wr)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="导出PDF">📄</button>
+                      <button @click.stop="exportSingleWeeklyPDF(wr)" class="text-gray-400 hover:text-blue-600 text-sm p-1" title="打印预览">🖨️</button>
                       <button @click.stop="deleteWeekly(wr.id)" class="text-gray-400 hover:text-red-600 text-sm p-1">🗑️</button>
                     </div>
                   </div>
@@ -2031,7 +2031,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
             <!-- 保存按钮 -->
             <div class="flex justify-end gap-2">
-              <button @click="exportCurrentWeeklyPDF" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">📄 导出PDF</button>
+              <button @click="exportCurrentWeeklyPDF" class="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">🖨️ 打印预览</button>
               <button @click="showWeeklyEditor=false" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
               <button @click="saveWeekly" class="px-6 py-2 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium">保存周报</button>
             </div>
@@ -2045,7 +2045,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <div class="flex gap-2">
               <button @click="exportNotesListPDF"
                 class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                📄 导出全部PDF
+                🖨️ 打印预览
               </button>
               <button @click="createNewNote()"
                 class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
@@ -2157,7 +2157,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                             <h3 class="font-semibold text-gray-800 text-sm truncate">{{ note.title || '无标题笔记' }}</h3>
                           </div>
                           <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                            <button @click.stop="exportSingleNotePDF(note)" class="text-gray-400 hover:text-blue-600 text-xs p-1" title="导出PDF">📄</button>
+                            <button @click.stop="exportSingleNotePDF(note)" class="text-gray-400 hover:text-blue-600 text-xs p-1" title="打印预览">🖨️</button>
                             <button @click.stop="togglePin(note)" class="text-gray-400 hover:text-primary-500 text-xs p-1" :title="note.pinned?'取消置顶':'置顶'">📌</button>
                             <button @click.stop="toggleStar(note)" class="text-gray-400 hover:text-yellow-500 text-xs p-1" :title="note.starred?'取消收藏':'收藏'">⭐</button>
                             <button @click.stop="trashNote(note.id)" class="text-gray-400 hover:text-red-600 text-xs p-1">🗑️</button>
@@ -2192,7 +2192,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
               <div class="flex-1"></div>
               <button @click="saveNote" class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600">保存笔记</button>
               <button @click="exportNote" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">导出文本</button>
-              <button @click="exportCurrentNotePDF" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">📄 导出PDF</button>
+              <button @click="exportCurrentNotePDF" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">🖨️ 打印预览</button>
             </div>
 
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 space-y-4">
@@ -2933,142 +2933,166 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       };
 
       // ===== PDF 导出工具函数 =====
-      // 通用：将 HTML 元素截图并生成 PDF
-      const htmlToPDF = async (element, filename = 'export.pdf') => {
-        try {
-          showToast('正在生成PDF...', 'info');
-          const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-          });
-          const { jsPDF } = window.jspdf;
-          const imgData = canvas.toDataURL('image/png');
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const imgWidth = pageWidth - 20; // 左右各10mm边距
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // 通用打印样式
+      const printStyles = `
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #1e293b; line-height: 1.6; padding: 0; }
+        h1 { font-size: 22px; color: #1e293b; margin-bottom: 6px; border-bottom: 2px solid #a855f7; padding-bottom: 6px; }
+        h2 { font-size: 16px; color: #6b21a8; margin: 18px 0 8px; padding-left: 8px; border-left: 3px solid #a855f7; }
+        h3 { font-size: 15px; color: #334155; margin: 14px 0 6px; }
+        h4 { font-size: 14px; color: #475569; margin: 10px 0 4px; }
+        p { font-size: 13px; color: #475569; margin-bottom: 6px; line-height: 1.7; }
+        .meta { color: #94a3b8; font-size: 12px; margin-bottom: 16px; }
+        .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; page-break-inside: avoid; }
+        .task-list { list-style: none; padding: 0; }
+        .task-list li { padding: 4px 0; font-size: 13px; color: #475569; display: flex; align-items: flex-start; gap: 6px; }
+        .task-list li::before { content: '☐'; color: #94a3b8; }
+        .task-list li.done::before { content: '☑'; color: #16a34a; }
+        .task-list li.done { text-decoration: line-through; color: #94a3b8; }
+        table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+        th { background: #f3e8ff; color: #6b21a8; font-weight: 600; text-align: left; padding: 8px 10px; border: 1px solid #d8b4fe; }
+        td { padding: 8px 10px; border: 1px solid #e2e8f0; color: #475569; }
+        tr:nth-child(even) td { background: #faf5ff; }
+        .problem-block { margin-bottom: 10px; padding: 10px; background: #fdf2f8; border-radius: 6px; border-left: 3px solid #ec4899; page-break-inside: avoid; }
+        .problem-block .label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .problem-block .label.warn { color: #ec4899; }
+        .problem-block .label.solve { color: #a855f7; }
+        .problem-block .content { font-size: 13px; color: #475569; line-height: 1.7; }
+        .summary-box { background: #faf5ff; border-radius: 8px; padding: 12px 16px; margin-top: 8px; }
+        .img-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .img-row img { max-width: 200px; max-height: 140px; border-radius: 6px; object-fit: cover; border: 1px solid #e2e8f0; }
+        .progress-bar { display: inline-block; width: 120px; height: 8px; background: #e2e8f0; border-radius: 4px; vertical-align: middle; margin: 0 4px; }
+        .progress-bar .fill { height: 100%; background: #a855f7; border-radius: 4px; }
+        .progress-bar .fill.done { background: #16a34a; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+        .badge-done { background: #dcfce7; color: #16a34a; }
+        .badge-progress { background: #fce7f3; color: #ec4899; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+        .header-bar .title { font-size: 20px; font-weight: 700; color: #6b21a8; }
+        .header-bar .date { font-size: 12px; color: #94a3b8; }
+        .note-content { font-size: 13px; color: #334155; line-height: 1.8; }
+        .note-content img { max-width: 100%; border-radius: 6px; margin: 6px 0; }
+        .note-content h1, .note-content h2, .note-content h3 { margin: 10px 0 4px; }
+        .note-content ul, .note-content ol { padding-left: 1.5em; margin: 4px 0; }
+        .note-content blockquote { border-left: 3px solid #a855f7; padding-left: 12px; color: #64748b; margin: 6px 0; }
+        .note-content pre { background: #f1f5f9; padding: 8px; border-radius: 4px; font-size: 12px; overflow-x: auto; }
+        .note-content table { width: 100%; }
+        .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
+        @page { margin: 15mm 12mm; }
+        @media print { body { padding: 0; } .card, .problem-block { page-break-inside: avoid; } h1, h2 { page-break-after: avoid; } }
+      `;
 
-          let heightLeft = imgHeight;
-          let position = 10; // 顶部边距
-
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= (pageHeight - 20);
-
-          // 多页处理
-          while (heightLeft > 0) {
-            position = heightLeft - imgHeight + 10;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-            heightLeft -= (pageHeight - 20);
-          }
-
-          pdf.save(filename);
-          showToast('PDF 导出成功');
-        } catch (e) {
-          console.error('PDF导出失败:', e);
-          showToast('PDF导出失败，请重试', 'error');
+      // 通用打印函数：打开新窗口写入 HTML 并调用打印
+      const printHTML = (title, bodyHTML) => {
+        const win = window.open('', '_blank', 'width=900,height=700');
+        if (!win) {
+          showToast('请允许弹窗以使用打印功能', 'error');
+          return;
         }
+        win.document.write(`<!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title}</title>
+          <style>${printStyles}</style>
+        </head>
+        <body>
+          ${bodyHTML}
+          <div class="footer">由 Personal Hub 生成 · ${formatTime(Date.now())}</div>
+        </body>
+        </html>`);
+        win.document.close();
+        win.focus();
+        // 延迟调用打印，确保图片等内容加载完成
+        setTimeout(() => {
+          win.print();
+        }, 500);
+        showToast('已打开打印预览');
       };
 
       // 会议纪要 - 导出全部
       const exportMeetingsPDF = async () => {
-        const container = document.createElement('div');
-        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
-        container.innerHTML = `<h1 style="margin-bottom:16px;color:#1e293b;">会议纪要汇总</h1>
-          <p style="color:#94a3b8;margin-bottom:24px;">导出时间：${formatTime(Date.now())}  ·  共 ${meetings.value.length} 场会议</p>`;
+        let body = `<div class="header-bar"><span class="title">📋 会议纪要汇总</span><span class="date">导出时间：${formatTime(Date.now())} · 共 ${meetings.value.length} 场</span></div>`;
         meetings.value.forEach((m, i) => {
           const todos = getMeetingTodoDisplay(m);
           let todosHtml = '';
           if (todos.length > 0) {
-            todosHtml = '<p style="color:#475569;font-size:13px;margin:0;"><b>待办事项：</b></p><ul style="margin:4px 0 0;padding-left:20px;">' +
-              todos.map(t => `<li style="color:#475569;font-size:13px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`).join('') +
+            todosHtml = '<h4>待办事项</h4><ul class="task-list">' +
+              todos.map(t => `<li class="${t.done?'done':''}">${t.text || '(空)'}</li>`).join('') +
               '</ul>';
           }
-          container.innerHTML += `
-            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;">
-              <h3 style="color:#334155;margin:0 0 8px;">${i+1}. ${m.title || '无标题'}</h3>
-              <p style="color:#64748b;font-size:13px;margin:0 0 8px;">📅 ${m.date || '-'}  ·  👥 ${m.attendees || '-'}</p>
-              <p style="color:#475569;font-size:14px;margin:0 0 8px;white-space:pre-wrap;">${m.content || '无内容'}</p>
-              ${todosHtml}
-            </div>`;
+          body += `<div class="card">
+            <h3>${i+1}. ${m.title || '无标题'}</h3>
+            <p class="meta">📅 ${m.date || '-'}  ·  👥 ${m.attendees || '-'}</p>
+            <div class="note-content">${m.content || '无内容'}</div>
+            ${todosHtml}
+          </div>`;
         });
-        document.body.appendChild(container);
-        await htmlToPDF(container, `会议纪要_${new Date().toISOString().slice(0,10)}.pdf`);
-        document.body.removeChild(container);
+        printHTML('会议纪要汇总', body);
       };
 
       // 会议纪要 - 导出单条
       const exportSingleMeetingPDF = async (m) => {
-        const container = document.createElement('div');
-        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
         const todos = getMeetingTodoDisplay(m);
         let todosHtml = '';
         if (todos.length > 0) {
-          todosHtml = '<h3 style="color:#334155;margin-top:20px;">待办事项</h3><ul style="margin:4px 0 0;padding-left:20px;">' +
-            todos.map(t => `<li style="color:#475569;font-size:14px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`).join('') +
+          todosHtml = '<h2>待办事项</h2><ul class="task-list">' +
+            todos.map(t => `<li class="${t.done?'done':''}">${t.text || '(空)'}</li>`).join('') +
             '</ul>';
         }
-        container.innerHTML = `
-          <h1 style="color:#1e293b;margin-bottom:8px;">${m.title || '无标题'}</h1>
-          <p style="color:#94a3b8;margin-bottom:20px;">📅 ${m.date || '-'}  ·  👥 ${m.attendees || '-'}</p>
-          <h3 style="color:#334155;">会议内容</h3>
-          <p style="color:#475569;font-size:14px;white-space:pre-wrap;line-height:1.7;">${m.content || '无内容'}</p>
+        const body = `<h1>${m.title || '无标题'}</h1>
+          <p class="meta">📅 ${m.date || '-'}  ·  👥 ${m.attendees || '-'}</p>
+          <h2>会议内容</h2>
+          <div class="note-content">${m.content || '无内容'}</div>
           ${todosHtml}`;
-        document.body.appendChild(container);
-        await htmlToPDF(container, `会议纪要_${m.title||'未命名'}.pdf`);
-        document.body.removeChild(container);
+        printHTML(`会议纪要_${m.title||'未命名'}`, body);
       };
 
       // 周报 - 导出列表全部
       const exportWeeklyListPDF = async () => {
-        const container = document.createElement('div');
-        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
-        container.innerHTML = `<h1 style="margin-bottom:16px;color:#1e293b;">周报汇总</h1>
-          <p style="color:#94a3b8;margin-bottom:24px;">导出时间：${formatTime(Date.now())}  ·  共 ${weeklyReports.value.length} 份周报</p>`;
+        let body = `<div class="header-bar"><span class="title">📋 周报汇总</span><span class="date">导出时间：${formatTime(Date.now())} · 共 ${weeklyReports.value.length} 份</span></div>`;
         weeklyReports.value.forEach((wr, i) => {
           const total = wr.tasks ? wr.tasks.length : 0;
           const done = wr.tasks ? wr.tasks.filter(t=>t.done).length : 0;
           const pct = total > 0 ? Math.round((done/total)*100) : 0;
           let tasksHtml = '';
-          if (wr.tasks) {
-            wr.tasks.forEach(t => {
-              tasksHtml += `<li style="color:#475569;font-size:13px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`;
-            });
+          if (wr.tasks && wr.tasks.length > 0) {
+            tasksHtml = '<table><thead><tr><th style="width:30px;">✓</th><th>工作内容</th><th style="width:60px;">状态</th><th style="width:50px;">进度</th></tr></thead><tbody>' +
+              wr.tasks.map(t => `<tr><td style="text-align:center;">${t.done?'☑':'☐'}</td><td>${t.text||'(空)'}</td><td><span class="badge ${t.done?'badge-done':'badge-progress'}">${t.done?'已完成':'进行中'}</span></td><td style="text-align:center;">${t.done?'100%':'0%'}</td></tr>`).join('') +
+              '</tbody></table>';
           }
           let problemsHtml = '';
-          if (wr.problems) {
-            wr.problems.forEach(p => {
+          if (wr.problems && wr.problems.length > 0) {
+            problemsHtml = '<h2>⚠️ 难点问题 & 解决办法</h2>';
+            wr.problems.forEach((p, j) => {
               let imgs = '';
               if (p.images && p.images.length > 0) {
-                imgs = '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">' +
-                  p.images.map(img => `<img src="${img}" style="max-width:180px;max-height:120px;border-radius:6px;object-fit:cover;">`).join('') +
-                  '</div>';
+                imgs = '<div class="img-row">' + p.images.map(img => `<img src="${img}">`).join('') + '</div>';
               }
-              problemsHtml += `<div style="margin-bottom:8px;"><p style="color:#ec4899;font-size:13px;margin:0;"><b>问题：</b>${p.problem||'-'}</p><p style="color:#a855f7;font-size:13px;margin:0;"><b>解决：</b>${p.solution||'-'}</p>${imgs}</div>`;
+              problemsHtml += `<div class="problem-block">
+                <div class="label warn">⚠ 问题 ${j+1}</div>
+                <div class="content">${p.problem||'-'}</div>
+                <div class="label solve" style="margin-top:6px;">✅ 解决办法</div>
+                <div class="content">${p.solution||'-'}</div>
+                ${imgs}
+              </div>`;
             });
           }
           let summaryExtra = '';
           if (wr.summaryImages && wr.summaryImages.length > 0) {
-            summaryExtra = '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">' +
-              wr.summaryImages.map(img => `<img src="${img}" style="max-width:180px;max-height:120px;border-radius:6px;object-fit:cover;">`).join('') +
-              '</div>';
+            summaryExtra = '<div class="img-row">' + wr.summaryImages.map(img => `<img src="${img}">`).join('') + '</div>';
           }
-          container.innerHTML += `
-            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;page-break-inside:avoid;">
-              <h2 style="color:#1e293b;margin:0 0 4px;">${wr.weekLabel || ('周报 ' + wr.startDate + ' ~ ' + wr.endDate)}</h2>
-              <p style="color:#64748b;font-size:13px;margin:0 0 8px;">📅 ${wr.startDate} ~ ${wr.endDate}  ·  任务完成率：${pct}% (${done}/${total})</p>
-              <h4 style="color:#334155;margin:12px 0 6px;">本周任务</h4>
-              <ul style="margin:0;padding-left:20px;">${tasksHtml}</ul>
-              ${problemsHtml ? `<h4 style="color:#334155;margin:12px 0 6px;">难点问题 & 解决办法</h4>${problemsHtml}` : ''}
-              ${wr.summary ? `<h4 style="color:#334155;margin:12px 0 6px;">个人总结</h4><p style="color:#475569;font-size:14px;white-space:pre-wrap;">${wr.summary}</p>${summaryExtra}` : (summaryExtra ? `<h4 style="color:#334155;margin:12px 0 6px;">个人总结</h4>${summaryExtra}` : '')}
-            </div>`;
+          body += `<div class="card">
+            <h3>${wr.weekLabel || ('周报 ' + wr.startDate + ' ~ ' + wr.endDate)}</h3>
+            <p class="meta">📅 ${wr.startDate} ~ ${wr.endDate}  ·  任务完成率：<b style="color:${pct===100?'#16a34a':'#ec4899'};">${pct}%</b> (${done}/${total})</p>
+            <h2>✅ 本周任务</h2>
+            ${tasksHtml||'<p style="color:#94a3b8;">暂无任务</p>'}
+            ${problemsHtml}
+            ${wr.summary ? `<h2>📝 个人总结</h2><div class="summary-box"><div class="note-content">${wr.summary}</div></div>${summaryExtra}` : (summaryExtra ? `<h2>📝 个人总结</h2>${summaryExtra}` : '')}
+          </div>`;
         });
-        document.body.appendChild(container);
-        await htmlToPDF(container, `周报汇总_${new Date().toISOString().slice(0,10)}.pdf`);
-        document.body.removeChild(container);
+        printHTML('周报汇总', body);
       };
 
       // 周报 - 导出单条
@@ -3082,69 +3106,60 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       };
 
       const exportWeeklyContentPDF = async (wr) => {
-        const container = document.createElement('div');
-        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
         const total = wr.tasks ? wr.tasks.length : 0;
         const done = wr.tasks ? wr.tasks.filter(t=>t.done).length : 0;
         const pct = total > 0 ? Math.round((done/total)*100) : 0;
         let tasksHtml = '';
-        if (wr.tasks) {
-          wr.tasks.forEach(t => {
-            tasksHtml += `<li style="color:#475569;font-size:13px;">${t.done ? '✅' : '⬜'} ${t.text || '(空)'}</li>`;
-          });
+        if (wr.tasks && wr.tasks.length > 0) {
+          tasksHtml = '<table><thead><tr><th style="width:30px;">✓</th><th>工作内容</th><th style="width:60px;">状态</th><th style="width:50px;">进度</th></tr></thead><tbody>' +
+            wr.tasks.map(t => `<tr><td style="text-align:center;">${t.done?'☑':'☐'}</td><td>${t.text||'(空)'}</td><td><span class="badge ${t.done?'badge-done':'badge-progress'}">${t.done?'已完成':'进行中'}</span></td><td style="text-align:center;">${t.done?'100%':'0%'}</td></tr>`).join('') +
+            '</tbody></table>';
         }
         let problemsHtml = '';
-        if (wr.problems) {
-          wr.problems.forEach(p => {
+        if (wr.problems && wr.problems.length > 0) {
+          problemsHtml = '<h2>⚠️ 难点问题 & 解决办法</h2>';
+          wr.problems.forEach((p, j) => {
             let imgs = '';
             if (p.images && p.images.length > 0) {
-              imgs = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;">' +
-                p.images.map(img => `<img src="${img}" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;">`).join('') +
-                '</div>';
+              imgs = '<div class="img-row">' + p.images.map(img => `<img src="${img}">`).join('') + '</div>';
             }
-            problemsHtml += `<div style="margin-bottom:8px;page-break-inside:avoid;"><p style="color:#ec4899;font-size:13px;margin:0 0 4px;"><b>⚠ 问题：</b>${p.problem||'-'}</p><p style="color:#a855f7;font-size:13px;margin:0;"><b>✅ 解决办法：</b>${p.solution||'-'}</p>${imgs}</div>`;
+            problemsHtml += `<div class="problem-block">
+              <div class="label warn">⚠ 问题 ${j+1}</div>
+              <div class="content">${p.problem||'-'}</div>
+              <div class="label solve" style="margin-top:6px;">✅ 解决办法</div>
+              <div class="content">${p.solution||'-'}</div>
+              ${imgs}
+            </div>`;
           });
         }
         let summaryImgs = '';
         if (wr.summaryImages && wr.summaryImages.length > 0) {
-          summaryImgs = '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">' +
-            wr.summaryImages.map(img => `<img src="${img}" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;">`).join('') +
-            '</div>';
+          summaryImgs = '<div class="img-row">' + wr.summaryImages.map(img => `<img src="${img}">`).join('') + '</div>';
         }
-        container.innerHTML = `
-          <h1 style="color:#1e293b;margin-bottom:8px;">${wr.weekLabel || ('周报 ' + (wr.startDate||'') + ' ~ ' + (wr.endDate||''))}</h1>
-          <p style="color:#64748b;font-size:14px;margin-bottom:20px;">📅 ${wr.startDate||'-'} ~ ${wr.endDate||'-'}  ·  任务完成率：<b style="color:${pct===100?'#16a34a':'#ec4899'};">${pct}%</b> (${done}/${total})</p>
-          <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">✅ 本周任务</h2>
-          <ul style="margin:0;padding-left:20px;">${tasksHtml||'<li style="color:#94a3b8;">暂无任务</li>'}</ul>
-          <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">⚠️ 难点问题 & 解决办法</h2>
-          ${problemsHtml||'<p style="color:#94a3b8;font-size:13px;">暂无记录</p>'}
-          <h2 style="color:#334155;font-size:16px;margin:16px 0 8px;">📝 个人总结</h2>
-          <p style="color:#475569;font-size:14px;white-space:pre-wrap;line-height:1.7;">${wr.summary||'暂无总结'}</p>${summaryImgs}`;
-        document.body.appendChild(container);
-        await htmlToPDF(container, `周报_${wr.weekLabel||wr.startDate||'未命名'}.pdf`);
-        document.body.removeChild(container);
+        const body = `<h1>${wr.weekLabel || ('周报 ' + (wr.startDate||'') + ' ~ ' + (wr.endDate||''))}</h1>
+          <p class="meta">📅 ${wr.startDate||'-'} ~ ${wr.endDate||'-'}  ·  任务完成率：<b style="color:${pct===100?'#16a34a':'#ec4899'};">${pct}%</b> (${done}/${total})</p>
+          <h2>✅ 本周任务</h2>
+          ${tasksHtml||'<p style="color:#94a3b8;">暂无任务</p>'}
+          ${problemsHtml||'<h2>⚠️ 难点问题 & 解决办法</h2><p style="color:#94a3b8;">暂无记录</p>'}
+          <h2>📝 个人总结</h2>
+          <div class="summary-box"><div class="note-content">${wr.summary||'暂无总结'}</div></div>${summaryImgs}`;
+        printHTML(`周报_${wr.weekLabel||wr.startDate||'未命名'}`, body);
       };
 
       // 笔记 - 导出列表全部
       const exportNotesListPDF = async () => {
-        const container = document.createElement('div');
-        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
-        container.innerHTML = `<h1 style="margin-bottom:16px;color:#1e293b;">笔记汇总</h1>
-          <p style="color:#94a3b8;margin-bottom:24px;">导出时间：${formatTime(Date.now())}  ·  共 ${activeNotes.value.length} 篇笔记</p>`;
+        let body = `<div class="header-bar"><span class="title">📝 笔记汇总</span><span class="date">导出时间：${formatTime(Date.now())} · 共 ${activeNotes.value.length} 篇</span></div>`;
         activeNotes.value.forEach((n, i) => {
           const div = document.createElement('div');
           div.innerHTML = n.content || '';
           const text = (div.textContent || '').slice(0, 500);
-          container.innerHTML += `
-            <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;page-break-inside:avoid;">
-              <h3 style="color:#334155;margin:0 0 4px;">${i+1}. ${n.starred?'⭐':''}${n.pinned?'📌':''} ${n.title||'无标题'}</h3>
-              <p style="color:#64748b;font-size:12px;margin:0 0 8px;">📂 ${n.category||'-'}  ${(n.tags||[]).map(t=>'#'+t).join(' ')}  ·  ${formatTime(n.updatedAt)}</p>
-              <p style="color:#475569;font-size:13px;line-height:1.6;white-space:pre-wrap;">${text}${(n.content||'').length>500?'...':''}</p>
-            </div>`;
+          body += `<div class="card">
+            <h3>${i+1}. ${n.starred?'⭐ ':''}${n.pinned?'📌 ':''}${n.title||'无标题'}</h3>
+            <p class="meta">📂 ${n.category||'-'}  ${(n.tags||[]).map(t=>'#'+t).join(' ')}  ·  ${formatTime(n.updatedAt)}</p>
+            <p style="color:#475569;font-size:13px;line-height:1.6;">${text}${(n.content||'').length>500?'...':''}</p>
+          </div>`;
         });
-        document.body.appendChild(container);
-        await htmlToPDF(container, `笔记汇总_${new Date().toISOString().slice(0,10)}.pdf`);
-        document.body.removeChild(container);
+        printHTML('笔记汇总', body);
       };
 
       // 笔记 - 导出单条
@@ -3159,19 +3174,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       };
 
       const exportNoteContentPDF = async (note) => {
-        const container = document.createElement('div');
-        container.style.cssText = 'padding:30px;font-family:sans-serif;background:#fff;width:700px;';
-        container.innerHTML = `
-          <h1 style="color:#1e293b;margin-bottom:4px;">${note.starred?'⭐ ':''}${note.pinned?'📌 ':''}${note.title||'无标题笔记'}</h1>
-          <p style="color:#94a3b8;font-size:12px;margin-bottom:20px;">
-            📂 ${note.category||'-'}  ${(note.tags||[]).map(t=>'#'+t).join(' ')}  ·  创建：${formatTime(note.createdAt)}  ·  修改：${formatTime(note.updatedAt)}
-            ${note.linkedWeekly ? ' · 🔗 关联周报' : ''}${note.linkedMeeting ? ' · 🔗 关联会议' : ''}
-          </p>
+        const body = `<h1>${note.starred?'⭐ ':''}${note.pinned?'📌 ':''}${note.title||'无标题笔记'}</h1>
+          <p class="meta">📂 ${note.category||'-'}  ${(note.tags||[]).map(t=>'#'+t).join(' ')}  ·  创建：${formatTime(note.createdAt)}  ·  修改：${formatTime(note.updatedAt)}
+          ${note.linkedWeekly ? ' · 🔗 关联周报' : ''}${note.linkedMeeting ? ' · 🔗 关联会议' : ''}</p>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin-bottom:16px;">
-          <div style="color:#334155;font-size:14px;line-height:1.8;">${note.content||'<span style="color:#94a3b8;">空笔记</span>'}</div>`;
-        document.body.appendChild(container);
-        await htmlToPDF(container, `笔记_${note.title||'未命名'}.pdf`);
-        document.body.removeChild(container);
+          <div class="note-content">${note.content||'<span style="color:#94a3b8;">空笔记</span>'}</div>`;
+        printHTML(`笔记_${note.title||'未命名'}`, body);
       };
 
       // ===== 持久化工具 =====
