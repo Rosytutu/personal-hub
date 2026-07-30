@@ -1498,51 +1498,48 @@
       // 通用打印样式
       const printStyles = `
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #1e293b; line-height: 1.5; padding: 0; }
-        h1 { font-size: 20px; color: #1e293b; margin-bottom: 4px; border-bottom: 2px solid #a855f7; padding-bottom: 5px; }
-        h2 { font-size: 14px; color: #6b21a8; margin: 14px 0 6px; padding-left: 6px; border-left: 3px solid #a855f7; }
-        h3 { font-size: 14px; color: #334155; margin: 10px 0 4px; }
-        h4 { font-size: 13px; color: #475569; margin: 8px 0 3px; }
-        p { font-size: 12px; color: #475569; margin-bottom: 4px; line-height: 1.6; }
-        .meta { color: #94a3b8; font-size: 11px; margin-bottom: 12px; }
-        .card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; page-break-inside: avoid; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #222; line-height: 1.5; padding: 0; }
+        h1 { font-size: 18px; color: #222; margin-bottom: 4px; padding-bottom: 5px; border-bottom: 1px solid #999; }
+        h2 { font-size: 14px; color: #333; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 1px solid #ddd; }
+        h3 { font-size: 14px; color: #333; margin: 10px 0 4px; }
+        p { font-size: 12px; color: #333; margin-bottom: 4px; line-height: 1.6; }
+        .meta { color: #888; font-size: 11px; margin-bottom: 10px; }
+        .card { border-bottom: 1px solid #eee; padding: 8px 0; margin-bottom: 8px; page-break-inside: avoid; }
+        /* 任务表格 - 紧凑黑白 */
+        table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 12px; }
+        th { background: #f5f5f5; color: #333; font-weight: 600; text-align: left; padding: 4px 8px; border: 1px solid #ccc; font-size: 11px; }
+        td { padding: 4px 8px; border: 1px solid #ddd; color: #333; line-height: 1.5; }
+        tr:nth-child(even) td { background: #fafafa; }
         /* 紧凑任务列表 */
         .task-list { list-style: none; padding: 0; margin: 0; }
-        .task-list li { padding: 2px 0; font-size: 12px; color: #475569; display: flex; align-items: center; gap: 5px; line-height: 1.5; }
+        .task-list li { padding: 2px 0; font-size: 12px; color: #333; display: flex; align-items: center; gap: 5px; line-height: 1.5; }
         .task-list li .check { width: 14px; text-align: center; flex-shrink: 0; }
-        .task-list li .check.done { color: #16a34a; }
-        .task-list li .check.todo { color: #cbd5e1; }
+        .task-list li .check.done { color: #555; }
+        .task-list li .check.todo { color: #bbb; }
         .task-list li .text { flex: 1; }
-        .task-list li.done .text { text-decoration: line-through; color: #94a3b8; }
-        .task-list li .pct { font-size: 10px; color: #94a3b8; flex-shrink: 0; min-width: 30px; text-align: right; }
-        /* 紧凑表格 */
-        table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 12px; }
-        th { background: #f3e8ff; color: #6b21a8; font-weight: 600; text-align: left; padding: 4px 8px; border: 1px solid #d8b4fe; font-size: 11px; }
-        td { padding: 3px 8px; border: 1px solid #e2e8f0; color: #475569; line-height: 1.5; }
-        tr:nth-child(even) td { background: #faf5ff; }
-        .problem-block { margin-bottom: 8px; padding: 8px 10px; background: #fdf2f8; border-radius: 5px; border-left: 3px solid #ec4899; page-break-inside: avoid; }
-        .problem-block .label { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
-        .problem-block .label.warn { color: #ec4899; }
-        .problem-block .label.solve { color: #a855f7; }
-        .problem-block .content { font-size: 12px; color: #475569; line-height: 1.6; }
-        .summary-box { background: #faf5ff; border-radius: 6px; padding: 10px 14px; margin-top: 6px; }
+        .task-list li.done .text { text-decoration: line-through; color: #999; }
+        .task-list li .pct { font-size: 10px; color: #888; flex-shrink: 0; min-width: 30px; text-align: right; }
+        /* 问题块 - 简洁无色 */
+        .problem-block { margin-bottom: 8px; padding: 6px 0; page-break-inside: avoid; }
+        .problem-block .label { font-size: 11px; font-weight: 600; margin-bottom: 2px; color: #555; }
+        .problem-block .content { font-size: 12px; color: #333; line-height: 1.6; }
+        .summary-box { padding: 6px 0; margin-top: 4px; }
         .img-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
-        .img-row img { max-width: 180px; max-height: 120px; border-radius: 5px; object-fit: cover; border: 1px solid #e2e8f0; }
-        .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 500; }
-        .badge-done { background: #dcfce7; color: #16a34a; }
-        .badge-progress { background: #fce7f3; color: #ec4899; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
-        .header-bar .title { font-size: 18px; font-weight: 700; color: #6b21a8; }
-        .header-bar .date { font-size: 11px; color: #94a3b8; }
-        .note-content { font-size: 12px; color: #334155; line-height: 1.7; }
-        .note-content img { max-width: 100%; border-radius: 5px; margin: 4px 0; }
+        .img-row img { max-width: 180px; max-height: 120px; border-radius: 4px; object-fit: cover; border: 1px solid #ddd; }
+        .badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-weight: 500; border: 1px solid #ccc; }
+        .badge-done { background: #f0f0f0; color: #555; border-color: #bbb; }
+        .badge-progress { background: #fff; color: #888; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #333; }
+        .header-bar .title { font-size: 18px; font-weight: 700; color: #222; }
+        .header-bar .date { font-size: 11px; color: #888; }
+        .note-content { font-size: 12px; color: #222; line-height: 1.7; }
+        .note-content img { max-width: 100%; border-radius: 4px; margin: 4px 0; }
         .note-content h1, .note-content h2, .note-content h3 { margin: 8px 0 3px; }
         .note-content ul, .note-content ol { padding-left: 1.4em; margin: 3px 0; }
-        .note-content blockquote { border-left: 3px solid #a855f7; padding-left: 10px; color: #64748b; margin: 4px 0; }
-        .note-content pre { background: #f1f5f9; padding: 6px; border-radius: 4px; font-size: 11px; overflow-x: auto; }
+        .note-content blockquote { border-left: 2px solid #bbb; padding-left: 10px; color: #555; margin: 4px 0; }
+        .note-content pre { background: #f5f5f5; padding: 6px; border-radius: 3px; font-size: 11px; overflow-x: auto; }
         .note-content table { width: 100%; }
-        .note-content b, .note-content strong { color: #7e22ce; }
-        .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #94a3b8; }
+        .footer { margin-top: 20px; padding-top: 6px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #999; }
         @page { margin: 12mm 10mm; }
         @media print { body { padding: 0; } .card, .problem-block { page-break-inside: avoid; } h1, h2 { page-break-after: avoid; } }
       `;
@@ -1654,9 +1651,9 @@
           const pct = total > 0 ? Math.round((done/total)*100) : 0;
           let tasksHtml = '';
           if (wr.tasks && wr.tasks.length > 0) {
-            tasksHtml = '<ul class="task-list">' +
-              wr.tasks.map(t => `<li><span class="check ${t.done?'done':'todo'}">${t.done?'☑':'☐'}</span><span class="text">${t.text||'(空)'}</span><span class="pct">${t.done?'100%':'0%'}</span></li>`).join('') +
-              '</ul>';
+            tasksHtml = '<table><thead><tr><th style="width:24px;">✓</th><th>工作内容</th><th style="width:50px;">状态</th><th style="width:36px;">进度</th></tr></thead><tbody>' +
+              wr.tasks.map(t => `<tr><td style="text-align:center;">${t.done?'☑':'☐'}</td><td>${t.text||'(空)'}</td><td style="font-size:11px;color:#777;">${t.done?'已完成':'计划中'}</td><td style="text-align:center;font-size:11px;">${t.done?'100%':'0%'}</td></tr>`).join('') +
+              '</tbody></table>';
           }
           let problemsHtml = '';
           if (wr.problems && wr.problems.length > 0) {
