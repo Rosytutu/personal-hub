@@ -797,11 +797,13 @@
         <span class="text-xs font-semibold text-gray-700">🖼️ 图片大小</span>
         <button @click="closeImgPopup" class="text-gray-400 hover:text-gray-600 text-xs">✕</button>
       </div>
-      <input type="range" min="20" max="100" :value="imgResizePopup.width" @input="applyImgWidth($event.target.value)" class="mb-2">
-      <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-        <span>20%</span>
-        <span class="font-bold text-primary-600">{{ imgResizePopup.width }}%</span>
-        <span>100%</span>
+      <div class="flex gap-1.5 mb-3">
+        <button v-for="size in [25, 50, 75, 100]" :key="size"
+          @click="applyImgWidth(size)"
+          :class="[
+            'flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all',
+            imgResizePopup.width === size ? 'bg-primary-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-primary-100'
+          ]">{{ size }}%</button>
       </div>
       <button @click="deleteSelectedImg" class="w-full px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs hover:bg-red-100 transition-colors">🗑️ 删除图片</button>
     </div>
@@ -953,7 +955,8 @@
       const applyImgWidth = (val) => {
         if (!selectedImg.value) return;
         selectedImg.value.style.maxWidth = val + '%';
-        // 触发更新
+        selectedImg.value.style.width = val + '%';
+        imgResizePopup.value.width = val;
         const editor = selectedImg.value.closest('.rte-content');
         if (editor) editor.dispatchEvent(new Event('input', { bubbles: true }));
       };
