@@ -1812,11 +1812,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                       <button type="button" @mousedown.prevent="execRTE($event,'insertUnorderedList')" title="列表">•</button>
                     </div>
                     <div class="rte-content" contenteditable="true" data-rte="meetingContent" data-placeholder="记录会议讨论内容，可直接粘贴图片..."
-                      ref="rteMeetingContent"
+                      v-rte="meetingForm.content"
                       @input="onRteInput('meetingContent', $event.target.innerHTML)"
                       @paste="handleRichPaste($event, $event.target)"
-                      @click="handleImgClick($event)"
-                      v-once></div>
+                      @click="handleImgClick($event)"></div>
                   </div>
                 </div>
                 <div>
@@ -1967,6 +1966,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                   <!-- 问题 -->
                   <div class="rte-area mb-2">
                     <div class="rte-content" contenteditable="true" :data-rte="'weeklyProblem_'+(p._rteKey||i)" data-placeholder="描述难点问题，可直接粘贴图片..."
+                      v-rte="p.problem"
                       @input="onRteInput('weeklyProblem_'+(p._rteKey||i), $event.target.innerHTML)"
                       @paste="handleRichPaste($event, $event.target)"
                       @click="handleImgClick($event)"></div>
@@ -1974,6 +1974,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                   <!-- 解决办法 -->
                   <div class="rte-area">
                     <div class="rte-content" contenteditable="true" :data-rte="'weeklySolution_'+(p._rteKey||i)" data-placeholder="对应解决办法，可直接粘贴图片..."
+                      v-rte="p.solution"
                       @input="onRteInput('weeklySolution_'+(p._rteKey||i), $event.target.innerHTML)"
                       @paste="handleRichPaste($event, $event.target)"
                       @click="handleImgClick($event)"></div>
@@ -2008,11 +2009,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                   <button type="button" @mousedown.prevent="execRTE($event,'formatBlock','h3')" title="标题">H</button>
                 </div>
                 <div class="rte-content" contenteditable="true" data-rte="weeklySummary" style="min-height:80px;" data-placeholder="写下本周的个人总结、收获与反思，可直接粘贴图片..."
-                  ref="rteWeeklySummary"
+                  v-rte="weeklyForm.summary"
                   @input="onRteInput('weeklySummary', $event.target.innerHTML)"
                   @paste="handleRichPaste($event, $event.target)"
-                  @click="handleImgClick($event)"
-                  v-once></div>
+                  @click="handleImgClick($event)"></div>
               </div>
               <!-- 总结图片 -->
               <div class="mt-3">
@@ -3368,39 +3368,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         // 数据已在 ref 初始化时加载
       });
 
-      // 监听会议模态框打开，设置 RTE 初始内容
-      watch(showMeetingModal, async (val) => {
-        if (val) {
-          await nextTick();
-          // 会议内容编辑器
-          const editor = document.querySelector('[data-rte="meetingContent"]');
-          if (editor) {
-            editor.innerHTML = meetingForm.value.content || '';
-          }
-        }
-      });
-
-      // 监听周报编辑器打开，设置 RTE 初始内容
-      watch(showWeeklyEditor, async (val) => {
-        if (val) {
-          await nextTick();
-          // 周报总结编辑器
-          const summaryEditor = document.querySelector('[data-rte="weeklySummary"]');
-          if (summaryEditor) {
-            summaryEditor.innerHTML = weeklyForm.value.summary || '';
-          }
-          // 周报问题/解决办法由 v-for 动态渲染，使用 _rteKey 定位
-          await nextTick();
-          weeklyForm.value.problems.forEach((p, i) => {
-            const key = p._rteKey || i;
-            const problemEl = document.querySelector(`[data-rte="weeklyProblem_${key}"]`);
-            const solutionEl = document.querySelector(`[data-rte="weeklySolution_${key}"]`);
-            if (problemEl) problemEl.innerHTML = p.problem || '';
-            if (solutionEl) solutionEl.innerHTML = p.solution || '';
-          });
-        }
-      });
-
       return {
         currentTab, tabs, toast, showToast, execRTE, onRteInput, handlePasteImage, handleRichPaste, handleImgClick, applyImgWidth, deleteSelectedImg, closeImgPopup, imgResizePopup,
         // 日历
@@ -3429,6 +3396,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         exportWeeklyListPDF, exportSingleWeeklyPDF, exportCurrentWeeklyPDF,
         exportNotesListPDF, exportSingleNotePDF, exportCurrentNotePDF
       };
+    }
+  });
+
+  // 自定义指令 v-rte：管理 contenteditable 元素的初始内容
+  // 只在元素未聚焦时设置 innerHTML，避免输入时光标丢失
+  app.directive('rte', {
+    // el: DOM 元素, binding: { value: HTML 字符串 }
+    mounted(el, binding) {
+      el.innerHTML = binding.value || '';
+    },
+    updated(el, binding) {
+      // 只在编辑器未聚焦时更新（避免输入时光标重置）
+      if (document.activeElement !== el) {
+        const newVal = binding.value || '';
+        // 避免重复设置相同内容
+        if (el.innerHTML !== newVal) {
+          el.innerHTML = newVal;
+        }
+      }
     }
   });
 
