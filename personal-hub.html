@@ -330,7 +330,16 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">会议内容</label>
-                  <textarea v-model="meetingForm.content" rows="4" placeholder="记录会议讨论内容..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+                  <textarea v-model="meetingForm.content" rows="4" placeholder="记录会议讨论内容，可直接粘贴图片..." 
+                    @paste="handlePasteImage($event, meetingForm.contentImages || (meetingForm.contentImages = []))"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+                  <!-- 粘贴的图片预览 -->
+                  <div v-if="meetingForm.contentImages && meetingForm.contentImages.length > 0" class="flex flex-wrap gap-2 mt-2">
+                    <div v-for="(img, j) in meetingForm.contentImages" :key="j" class="img-preview-wrap">
+                      <img :src="img" alt="粘贴图片">
+                      <span class="remove-btn" @click="meetingForm.contentImages.splice(j,1)">✕</span>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <div class="flex items-center justify-between mb-1">
@@ -477,8 +486,12 @@
                     <span class="text-xs font-medium text-gray-500">问题 {{ i+1 }}</span>
                     <button @click="weeklyForm.problems.splice(i,1)" class="text-gray-300 hover:text-red-500 text-sm">✕</button>
                   </div>
-                  <textarea v-model="p.problem" placeholder="描述难点问题..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200 mb-2"></textarea>
-                  <textarea v-model="p.solution" placeholder="对应解决办法..." rows="2" class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200"></textarea>
+                  <textarea v-model="p.problem" placeholder="描述难点问题，可直接粘贴图片..." rows="2" 
+                    @paste="handlePasteImage($event, p.images || (p.images = []))"
+                    class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200 mb-2"></textarea>
+                  <textarea v-model="p.solution" placeholder="对应解决办法，可直接粘贴图片..." rows="2" 
+                    @paste="handlePasteImage($event, p.images || (p.images = []))"
+                    class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200"></textarea>
                   <!-- 问题图片 -->
                   <div class="mt-2">
                     <div class="flex flex-wrap gap-2">
@@ -499,7 +512,8 @@
             <!-- 本周个人总结 -->
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
               <h3 class="text-md font-semibold text-gray-800 mb-3">📝 本周个人总结</h3>
-              <textarea v-model="weeklyForm.summary" placeholder="写下本周的个人总结、收获与反思..." rows="5"
+              <textarea v-model="weeklyForm.summary" placeholder="写下本周的个人总结、收获与反思，可直接粘贴图片..." rows="5"
+                @paste="handlePasteImage($event, weeklyForm.summaryImages || (weeklyForm.summaryImages = []))"
                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
               <!-- 总结图片 -->
               <div class="mt-3">
@@ -797,6 +811,25 @@
         });
       };
 
+      // 粘贴图片处理：检测剪贴板图片，转 base64 存入对应图片数组
+      const handlePasteImage = async (event, imageArray) => {
+        const items = event.clipboardData?.items;
+        if (!items) return;
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (!file) return;
+            try {
+              const base64 = await fileToBase64(file);
+              imageArray.push(base64);
+              showToast('图片已粘贴');
+            } catch (e) { showToast('图片粘贴失败', 'error'); }
+            return;
+          }
+        }
+      };
+
       // ========== 会议纪要模块 ==========
       const meetings = ref(loadFromStorage(STORAGE_KEY.meetings, []));
       const meetingSearch = ref('');
@@ -805,7 +838,7 @@
       const meetingForm = ref({ title: '', date: '', attendees: '', content: '', todos: [] });
 
       const resetMeetingForm = () => {
-        meetingForm.value = { title: '', date: new Date().toISOString().slice(0,10), attendees: '', content: '', todos: [] };
+        meetingForm.value = { title: '', date: new Date().toISOString().slice(0,10), attendees: '', content: '', contentImages: [], todos: [] };
       };
 
       const addMeetingTodo = () => {
@@ -1624,7 +1657,7 @@
       });
 
       return {
-        currentTab, tabs, toast, showToast, execRTE,
+        currentTab, tabs, toast, showToast, execRTE, handlePasteImage,
         // 日历
         calendarYear, calendarMonth, selectedCalendarDate, calendarCells,
         prevMonth, nextMonth, goToday, selectCalendarDate, getCalendarEvents, getCalendarCellClass,
