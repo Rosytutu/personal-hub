@@ -59,6 +59,22 @@
     .slide-enter-from { transform: translateX(20px); opacity: 0; }
     .slide-leave-to { transform: translateX(-20px); opacity: 0; }
 
+    /* 内嵌富文本编辑区样式 */
+    .rte-area { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+    .rte-area:focus-within { border-color: #c084fc; box-shadow: 0 0 0 2px rgba(168,85,247,0.1); }
+    .rte-toolbar-mini { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 6px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+    .rte-toolbar-mini button { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 5px; border-radius: 4px; cursor: pointer; font-size: 12px; color: #475569; background: transparent; border: none; transition: all 0.12s; }
+    .rte-toolbar-mini button:hover { background: #e9d5ff; color: #7e22ce; }
+    .rte-content { padding: 8px 12px; min-height: 60px; font-size: 14px; line-height: 1.6; color: #334155; outline: none; }
+    .rte-content:empty:before { content: attr(data-placeholder); color: #94a3b8; }
+    .rte-content img { max-width: 100%; border-radius: 6px; margin: 4px 0; cursor: pointer; transition: outline 0.15s; }
+    .rte-content img:hover { outline: 2px solid #a855f7; outline-offset: 2px; }
+    .rte-content img.selected { outline: 3px solid #a855f7; outline-offset: 2px; }
+    .rte-content ul, .rte-content ol { padding-left: 1.5em; }
+    /* 图片缩放弹窗 */
+    .img-resize-popup { position: fixed; z-index: 300; background: #fff; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); padding: 14px; min-width: 220px; }
+    .img-resize-popup input[type=range] { width: 100%; }
+
     /* 模态框遮罩 */
     .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; display: flex; align-items: center; justify-content: center; }
     .modal-container { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 720px; width: 92%; max-height: 85vh; overflow-y: auto; }
@@ -330,15 +346,19 @@
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">会议内容</label>
-                  <textarea v-model="meetingForm.content" rows="4" placeholder="记录会议讨论内容，可直接粘贴图片..." 
-                    @paste="handlePasteImage($event, meetingForm.contentImages || (meetingForm.contentImages = []))"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
-                  <!-- 粘贴的图片预览 -->
-                  <div v-if="meetingForm.contentImages && meetingForm.contentImages.length > 0" class="flex flex-wrap gap-2 mt-2">
-                    <div v-for="(img, j) in meetingForm.contentImages" :key="j" class="img-preview-wrap">
-                      <img :src="img" alt="粘贴图片">
-                      <span class="remove-btn" @click="meetingForm.contentImages.splice(j,1)">✕</span>
+                  <div class="rte-area">
+                    <div class="rte-toolbar-mini">
+                      <button type="button" @mousedown.prevent="execRTE($event,'bold')" title="加粗"><b>B</b></button>
+                      <button type="button" @mousedown.prevent="execRTE($event,'italic')" title="斜体"><i>I</i></button>
+                      <button type="button" @mousedown.prevent="execRTE($event,'underline')" title="下划线"><u>U</u></button>
+                      <input type="color" class="w-5 h-5 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event,'foreColor',$event.target.value)" title="颜色">
+                      <button type="button" @mousedown.prevent="execRTE($event,'insertUnorderedList')" title="列表">•</button>
                     </div>
+                    <div class="rte-content" contenteditable="true" data-placeholder="记录会议讨论内容，可直接粘贴图片..."
+                      @input="meetingForm.content = $event.target.innerHTML"
+                      @paste="handleRichPaste($event, $event.target)"
+                      @click="handleImgClick($event)"
+                      v-html="meetingForm.content"></div>
                   </div>
                 </div>
                 <div>
@@ -486,12 +506,22 @@
                     <span class="text-xs font-medium text-gray-500">问题 {{ i+1 }}</span>
                     <button @click="weeklyForm.problems.splice(i,1)" class="text-gray-300 hover:text-red-500 text-sm">✕</button>
                   </div>
-                  <textarea v-model="p.problem" placeholder="描述难点问题，可直接粘贴图片..." rows="2" 
-                    @paste="handlePasteImage($event, p.images || (p.images = []))"
-                    class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200 mb-2"></textarea>
-                  <textarea v-model="p.solution" placeholder="对应解决办法，可直接粘贴图片..." rows="2" 
-                    @paste="handlePasteImage($event, p.images || (p.images = []))"
-                    class="w-full px-2 py-1 border border-gray-100 rounded text-sm focus:outline-none focus:ring-1 focus:ring-primary-200"></textarea>
+                  <!-- 问题 -->
+                  <div class="rte-area mb-2">
+                    <div class="rte-content" contenteditable="true" data-placeholder="描述难点问题，可直接粘贴图片..."
+                      @input="p.problem = $event.target.innerHTML"
+                      @paste="handleRichPaste($event, $event.target)"
+                      @click="handleImgClick($event)"
+                      v-html="p.problem"></div>
+                  </div>
+                  <!-- 解决办法 -->
+                  <div class="rte-area">
+                    <div class="rte-content" contenteditable="true" data-placeholder="对应解决办法，可直接粘贴图片..."
+                      @input="p.solution = $event.target.innerHTML"
+                      @paste="handleRichPaste($event, $event.target)"
+                      @click="handleImgClick($event)"
+                      v-html="p.solution"></div>
+                  </div>
                   <!-- 问题图片 -->
                   <div class="mt-2">
                     <div class="flex flex-wrap gap-2">
@@ -512,9 +542,21 @@
             <!-- 本周个人总结 -->
             <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
               <h3 class="text-md font-semibold text-gray-800 mb-3">📝 本周个人总结</h3>
-              <textarea v-model="weeklyForm.summary" placeholder="写下本周的个人总结、收获与反思，可直接粘贴图片..." rows="5"
-                @paste="handlePasteImage($event, weeklyForm.summaryImages || (weeklyForm.summaryImages = []))"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"></textarea>
+              <div class="rte-area">
+                <div class="rte-toolbar-mini">
+                  <button type="button" @mousedown.prevent="execRTE($event,'bold')" title="加粗"><b>B</b></button>
+                  <button type="button" @mousedown.prevent="execRTE($event,'italic')" title="斜体"><i>I</i></button>
+                  <button type="button" @mousedown.prevent="execRTE($event,'underline')" title="下划线"><u>U</u></button>
+                  <input type="color" class="w-5 h-5 rounded cursor-pointer border-0" @mousedown.stop @input="execRTE($event,'foreColor',$event.target.value)" title="颜色">
+                  <button type="button" @mousedown.prevent="execRTE($event,'insertUnorderedList')" title="列表">•</button>
+                  <button type="button" @mousedown.prevent="execRTE($event,'formatBlock','h3')" title="标题">H</button>
+                </div>
+                <div class="rte-content" contenteditable="true" style="min-height:80px;" data-placeholder="写下本周的个人总结、收获与反思，可直接粘贴图片..."
+                  @input="weeklyForm.summary = $event.target.innerHTML"
+                  @paste="handleRichPaste($event, $event.target)"
+                  @click="handleImgClick($event)"
+                  v-html="weeklyForm.summary"></div>
+              </div>
               <!-- 总结图片 -->
               <div class="mt-3">
                 <div class="flex flex-wrap gap-2">
@@ -748,6 +790,21 @@
         </div>
       </transition>
     </main>
+
+    <!-- 图片缩放控制弹窗 -->
+    <div v-if="imgResizePopup.show" class="img-resize-popup" :style="{ left: imgResizePopup.x + 'px', top: imgResizePopup.y + 'px' }">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-gray-700">🖼️ 图片大小</span>
+        <button @click="closeImgPopup" class="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+      </div>
+      <input type="range" min="20" max="100" :value="imgResizePopup.width" @input="applyImgWidth($event.target.value)" class="mb-2">
+      <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+        <span>20%</span>
+        <span class="font-bold text-primary-600">{{ imgResizePopup.width }}%</span>
+        <span>100%</span>
+      </div>
+      <button @click="deleteSelectedImg" class="w-full px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs hover:bg-red-100 transition-colors">🗑️ 删除图片</button>
+    </div>
   </div>
 
   <script>
@@ -828,6 +885,93 @@
             return;
           }
         }
+      };
+
+      // 富文本编辑区粘贴处理：图片直接插入编辑区
+      const handleRichPaste = async (event, editor) => {
+        const items = event.clipboardData?.items;
+        if (!items) return;
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (!file) return;
+            try {
+              const base64 = await fileToBase64(file);
+              // 在光标位置插入图片
+              const sel = window.getSelection();
+              const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+              if (range) {
+                const img = document.createElement('img');
+                img.src = base64;
+                img.style.maxWidth = '80%';
+                img.style.borderRadius = '6px';
+                img.style.margin = '4px 0';
+                range.deleteContents();
+                range.insertNode(img);
+                range.setStartAfter(img);
+                range.setEndAfter(img);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              } else {
+                editor.innerHTML += `<img src="${base64}" style="max-width:80%;border-radius:6px;margin:4px 0;">`;
+              }
+              // 触发 input 更新数据
+              editor.dispatchEvent(new Event('input', { bubbles: true }));
+              showToast('图片已插入');
+            } catch (e) { showToast('图片插入失败', 'error'); }
+            return;
+          }
+        }
+      };
+
+      // 点击图片弹出缩放控制
+      const selectedImg = ref(null);
+      const imgResizePopup = ref({ show: false, x: 0, y: 0, width: 80 });
+
+      const handleImgClick = (event) => {
+        if (event.target.tagName === 'IMG') {
+          // 取消之前选中的
+          document.querySelectorAll('.rte-content img.selected').forEach(img => img.classList.remove('selected'));
+          event.target.classList.add('selected');
+          selectedImg.value = event.target;
+          // 计算弹窗位置
+          const rect = event.target.getBoundingClientRect();
+          imgResizePopup.value = {
+            show: true,
+            x: Math.min(rect.right + 8, window.innerWidth - 240),
+            y: Math.max(rect.top - 10, 10),
+            width: Math.round(event.target.offsetWidth / event.target.parentElement.offsetWidth * 100) || 80
+          };
+        } else {
+          document.querySelectorAll('.rte-content img.selected').forEach(img => img.classList.remove('selected'));
+          selectedImg.value = null;
+          imgResizePopup.value.show = false;
+        }
+      };
+
+      const applyImgWidth = (val) => {
+        if (!selectedImg.value) return;
+        selectedImg.value.style.maxWidth = val + '%';
+        // 触发更新
+        const editor = selectedImg.value.closest('.rte-content');
+        if (editor) editor.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+
+      const deleteSelectedImg = () => {
+        if (!selectedImg.value) return;
+        const editor = selectedImg.value.closest('.rte-content');
+        selectedImg.value.remove();
+        selectedImg.value = null;
+        imgResizePopup.value.show = false;
+        if (editor) editor.dispatchEvent(new Event('input', { bubbles: true }));
+        showToast('图片已删除');
+      };
+
+      const closeImgPopup = () => {
+        document.querySelectorAll('.rte-content img.selected').forEach(img => img.classList.remove('selected'));
+        selectedImg.value = null;
+        imgResizePopup.value.show = false;
       };
 
       // ========== 会议纪要模块 ==========
@@ -1657,7 +1801,7 @@
       });
 
       return {
-        currentTab, tabs, toast, showToast, execRTE, handlePasteImage,
+        currentTab, tabs, toast, showToast, execRTE, handlePasteImage, handleRichPaste, handleImgClick, applyImgWidth, deleteSelectedImg, closeImgPopup, imgResizePopup,
         // 日历
         calendarYear, calendarMonth, selectedCalendarDate, calendarCells,
         prevMonth, nextMonth, goToday, selectCalendarDate, getCalendarEvents, getCalendarCellClass,
