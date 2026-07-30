@@ -1544,14 +1544,21 @@
         @media print { body { padding: 0; } .card, .problem-block { page-break-inside: avoid; } h1, h2 { page-break-after: avoid; } }
       `;
 
-      // 通用打印函数：打开新窗口写入 HTML 并调用打印
+      // 通用打印函数：用隐藏 iframe 打印（避免弹窗拦截）
       const printHTML = (title, bodyHTML) => {
-        const win = window.open('', '_blank', 'width=900,height=700');
-        if (!win) {
-          showToast('请允许弹窗以使用打印功能', 'error');
-          return;
-        }
-        win.document.write(`<!DOCTYPE html>
+        // 移除旧的打印 iframe
+        const oldFrame = document.getElementById('print-frame');
+        if (oldFrame) oldFrame.remove();
+
+        // 创建隐藏 iframe
+        const iframe = document.createElement('iframe');
+        iframe.id = 'print-frame';
+        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<!DOCTYPE html>
         <html lang="zh-CN">
         <head>
           <meta charset="UTF-8">
@@ -1564,10 +1571,10 @@
           <div class="footer">由 Personal Hub 生成 · ${formatTime(Date.now())}</div>
         </body>
         </html>`);
-        win.document.close();
-        win.focus();
-        // 等待图片加载完成后再调用打印
-        const imgs = win.document.querySelectorAll('img');
+        doc.close();
+
+        // 等待图片加载完成后再打印
+        const imgs = doc.querySelectorAll('img');
         const imgPromises = [];
         imgs.forEach(img => {
           if (!img.complete) {
@@ -1577,18 +1584,24 @@
             }));
           }
         });
-        Promise.all(imgPromises).then(() => {
+
+        const doPrint = () => {
           setTimeout(() => {
-            win.print();
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            // 打印后延迟移除 iframe
+            setTimeout(() => {
+              iframe.remove();
+            }, 1000);
           }, 300);
-        });
-        // 如果没有图片，也延迟调用打印
-        if (imgs.length === 0) {
-          setTimeout(() => {
-            win.print();
-          }, 500);
+        };
+
+        if (imgPromises.length > 0) {
+          Promise.all(imgPromises).then(doPrint);
+        } else {
+          doPrint();
         }
-        showToast('已打开打印预览');
+        showToast('正在准备打印预览...');
       };
 
       // 会议纪要 - 导出全部
@@ -1712,6 +1725,8 @@
               ${imgs}
             </div>`;
           });
+        } else {
+          problemsHtml = '<h2>⚠️ 难点问题 & 解决办法</h2><p style="color:#94a3b8;">暂无记录</p>';
         }
         let summaryImgs = '';
         if (wr.summaryImages && wr.summaryImages.length > 0) {
