@@ -898,16 +898,33 @@
         } else if (key === 'weeklySummary') {
           weeklyForm.value.summary = html;
         } else if (key.startsWith('weeklyProblem_')) {
-          const idx = parseInt(key.split('_')[1]);
-          if (weeklyForm.value.problems[idx]) {
-            weeklyForm.value.problems[idx].problem = html;
-          }
+          const rteKey = key.substring('weeklyProblem_'.length);
+          const p = weeklyForm.value.problems.find(p => String(p._rteKey) === rteKey);
+          if (p) p.problem = html;
         } else if (key.startsWith('weeklySolution_')) {
-          const idx = parseInt(key.split('_')[1]);
-          if (weeklyForm.value.problems[idx]) {
-            weeklyForm.value.problems[idx].solution = html;
-          }
+          const rteKey = key.substring('weeklySolution_'.length);
+          const p = weeklyForm.value.problems.find(p => String(p._rteKey) === rteKey);
+          if (p) p.solution = html;
         }
+      };
+
+      // 导出前从 DOM 同步 RTE 编辑器最新内容到数据模型
+      const syncRteFromDOM = () => {
+        // 会议内容
+        const mc = document.querySelector('[data-rte="meetingContent"]');
+        if (mc) meetingForm.value.content = mc.innerHTML;
+        // 周报总结
+        const ws = document.querySelector('[data-rte="weeklySummary"]');
+        if (ws) weeklyForm.value.summary = ws.innerHTML;
+        // 周报问题/解决办法
+        weeklyForm.value.problems.forEach(p => {
+          const key = p._rteKey;
+          if (!key) return;
+          const pe = document.querySelector(`[data-rte="weeklyProblem_${key}"]`);
+          if (pe) p.problem = pe.innerHTML;
+          const se = document.querySelector(`[data-rte="weeklySolution_${key}"]`);
+          if (se) p.solution = se.innerHTML;
+        });
       };
 
       // 同步 RTE 编辑器的 innerHTML 到 DOM（在数据从外部改变时调用）
@@ -1055,6 +1072,7 @@
       };
 
       const saveMeeting = () => {
+        syncRteFromDOM();
         if (!meetingForm.value.title.trim()) { showToast('请输入会议标题', 'error'); return; }
         if (editingMeeting.value) {
           const idx = meetings.value.findIndex(m => m.id === editingMeeting.value.id);
@@ -1204,6 +1222,7 @@
       };
 
       const saveWeekly = () => {
+        syncRteFromDOM();
         const data = JSON.parse(JSON.stringify(weeklyForm.value));
         if (editingWeeklyId.value) {
           const idx = weeklyReports.value.findIndex(w => w.id === editingWeeklyId.value);
@@ -1547,10 +1566,28 @@
         </html>`);
         win.document.close();
         win.focus();
-        // 延迟调用打印，确保图片等内容加载完成
-        setTimeout(() => {
-          win.print();
-        }, 500);
+        // 等待图片加载完成后再调用打印
+        const imgs = win.document.querySelectorAll('img');
+        const imgPromises = [];
+        imgs.forEach(img => {
+          if (!img.complete) {
+            imgPromises.push(new Promise(resolve => {
+              img.onload = resolve;
+              img.onerror = resolve;
+            }));
+          }
+        });
+        Promise.all(imgPromises).then(() => {
+          setTimeout(() => {
+            win.print();
+          }, 300);
+        });
+        // 如果没有图片，也延迟调用打印
+        if (imgs.length === 0) {
+          setTimeout(() => {
+            win.print();
+          }, 500);
+        }
         showToast('已打开打印预览');
       };
 
@@ -1645,6 +1682,7 @@
 
       // 周报 - 导出当前编辑中的
       const exportCurrentWeeklyPDF = async () => {
+        syncRteFromDOM();
         await exportWeeklyContentPDF(weeklyForm.value);
       };
 
